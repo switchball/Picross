@@ -67,8 +67,6 @@ seq3   = createSeq [3]
 seq5   = createSeq [5]
 seq12  = createSeq [1,2]
 seq111 = createSeq [1,1,1]
-seqs1  = [[1],[1],[5],[1],[1]]
-seqs2 = [[1],[1],[5],[1],[1]]
 
 disc1d = createDisc1d 5
 disc2d = createDisc 3 3
@@ -86,9 +84,13 @@ seqsHor1 = createSeqs [[3],[1,1,1],[5],[3],[1,1]]
 seqsVer1 = createSeqs [[2],[1,3],[4],[1,3],[2]]
 hs1      = (seqsHor1,discSmall)
 vs1      = (seqsVer1,discSmall)
-hsM1      = (seqsHor1,Just discSmall)
-vsM1      = (seqsVer1,Just discSmall)
-discCor1 = undefined
+hsM1     = (seqsHor1,Just discSmall)
+vsM1     = (seqsVer1,Just discSmall)
+discCor1 = [[Va,Oc,Oc,Oc,Va],
+            [Oc,Va,Oc,Va,Oc],
+            [Oc,Oc,Oc,Oc,Oc],
+            [Va,Oc,Oc,Oc,Va],
+            [Va,Oc,Va,Oc,Va]]
 
 
 --noname :: ([Sequence],[Sequence]) -> [[Disc]]
@@ -111,6 +113,7 @@ merge (x:x':xs) (y:ys) = x:y:(merge (x':xs) ys)
 
 -- solve x_0+x_1+...+x_m = n 
 -- where x_1...x_(m-1) >0 and x_0,x_m >= 0
+-- current alg notation: T=O(n^m) slow when n^m > 1e6
 intpartition     :: Int -> Int -> [[Int]]
 intpartition n m = map fstval $
                      filter (\s -> sum s <= n) $
@@ -127,22 +130,31 @@ generate n sq = map (\xss -> concat $ merge xss ocss) vasss
                         ocss  = buildseq Oc sq
 
 -- zip two [Disc] with discAnd logic
--- to see the common part or contradiction!
+-- to see the whether it has a contradiction!
 -- Often, 1st param is the known,
---        2nd param is the test one, for currying easily
+--        2nd param is the test one, for currying easily.
 validate  :: [Disc] -> [Disc] -> Maybe [Disc]
 validate  =  zipWithM discAnd
 
+-- zip two [Disc] with discOr logic
+-- to see the common part, i.e. some position stands still!
+-- the method is to be liftM up and to be folded.
 evidence  :: [Disc] -> [Disc] -> [Disc]
 evidence  = zipWith discOr
 
+-- liftM up the evidence method, to be folded.
+-- Notice originally Nothing will case the expr to be Nothing,
+-- here due to the logic or, we simplily ignore it.
 evidenceM :: Maybe [Disc] -> Maybe [Disc] -> Maybe [Disc]
 evidenceM Nothing x = x
 evidenceM x Nothing = x
 evidenceM x y       = (liftM2 evidence) x y
 
+-- applyRule take a sequence rule and a partial-known [Disc] state,
+-- to infer the certain position of [Disc] state.
+-- if there is no solution or contradiction, Nothing is returned.
 applyRule :: Sequence -> [Disc] -> Maybe [Disc]
--- for simple situation
+-- for simple situation, notice that [] is equivalent to [0]
 applyRule []  ds = validate ds (build Va n) where n = length ds
 applyRule [m] ds
   | m == 0  = validate ds (build Va n)
@@ -154,12 +166,16 @@ applyRule seq ds
   | otherwise = Nothing
     where n = length ds
 
-
+-- partialFill take a state, and produce a list of [Disc] gauss
 partialFill :: ([Sequence], [[Disc]]) -> [Maybe [Disc]]
 partialFill = uncurry . zipWith $ applyRule
 
+-- reduceState map a state to another inferred state, it use partialFill method,
+-- Notice if one of the (Maybe [Disc]) is Nothing, 
+--   the whole (Maybe [[Disc]]) will be Nothing.
 reduceState :: ([Sequence], [[Disc]]) -> ([Sequence], Maybe [[Disc]])
 reduceState x = ((fst x), sequence (partialFill x))
+
 
 solve :: [([Sequence], Maybe [[Disc]])] -> Maybe [[Disc]]
 solve [(_,Nothing),_] = Nothing
