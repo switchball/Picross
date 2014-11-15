@@ -54,7 +54,10 @@ createDisc1d :: Int -> [Disc]
 createDisc1d n = take n (repeat Un)
 
 createSeq :: [Int] -> Sequence
-createSeq = id
+createSeq =  id
+
+createSeqs :: [[Int]] -> [Sequence]
+createSeqs =  id
 
 type Sequence = [Int]
 type Sequences = [[Int]]
@@ -69,6 +72,22 @@ seqs2 = [[1],[1],[5],[1],[1]]
 
 disc1d = createDisc1d 5
 disc2d = createDisc 3 3
+
+discSmall = createDisc 5 5
+-- == Test Case == --
+{- Case No.1 Sprite
+   ***
+  * * *
+  *****
+   * *
+   * *
+-}
+seqsHor1 = createSeqs [[3],[1,1,1],[5],[3],[1,1]]
+seqsVer1 = createSeqs [[2],[1,3],[4],[1,3],[2]]
+hs1      = (seqsHor1,discSmall)
+vs1      = (seqsVer1,discSmall)
+discCor1 = undefined
+
 
 --noname :: ([Sequence],[Sequence]) -> [[Disc]]
 noname (v,h) = createDisc (length h) (length v)
@@ -141,3 +160,4 @@ solve ((hr,g):(vr,gt):[])
   | otherwise          = solve $ [(vr, transpose . snd $ result), result] 
                             where result = reduceState (hr,g)
 -}
+
