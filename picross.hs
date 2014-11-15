@@ -18,12 +18,13 @@ count x xs = length $ filter (==x) xs
 count2d x xss = sum $ map (count x) xss
 
 -- build a list with n element x
-build n x = take n (repeat x)
+build     :: a -> Int -> [a]
+build x n = take n (repeat x)
 
 -- build a 2d-list with ns seperate element x
 -- build x [1,0,2] = [[x],[],[x,x]]
 buildseq      :: a -> [Int] -> [[a]]
-buildseq x ns = map (\n->build n x) ns
+buildseq x ns = map (build x) ns
 
 
 data Disc = Un|Oc|Va
@@ -116,13 +117,14 @@ evidenceM x Nothing = x
 evidenceM x y       = (liftM2 evidence) x y
 
 applyRule :: Sequence -> [Disc] -> Maybe [Disc]
-applyRule []  ds = validate ds (build n Va) where n = length ds
+-- for simple situation
+applyRule []  ds = validate ds (build Va n) where n = length ds
 applyRule [m] ds
-  | m == 0  = validate ds (build n Va)
-  | m == n  = validate ds (build n Oc)
-  | 2*m > n = validate ds (build (n-m) Un ++ build (2*m-n) Oc ++ build (n-m) Un ) 
+  | m == 0  = validate ds (build Va n)
+  | m == n  = validate ds (build Oc n)
+  | 2*m > n = validate ds (build Un (n-m) ++ build Oc (2*m-n) ++ build Un (n-m) ) 
     where n = length ds
--- for possible situation, generate a list, validate them, then evidence them.
+-- for complex situation, generate a list, validate them, then evidence them.
 applyRule seq ds
   | sum seq + length seq - 1 <= n = foldl evidenceM Nothing (map (validate ds) (generate n seq))
     where n = length ds
