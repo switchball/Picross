@@ -1,4 +1,4 @@
-import Data.List (transpose, intersperse)
+import Data.List (transpose, intersperse, intercalate)
 import Control.Monad
 
 nest :: (t -> t) -> t -> Int -> t
@@ -20,8 +20,11 @@ count2d x xss = sum $ map (count x) xss
 -- build a list with n element x
 build n x = take n (repeat x)
 
--- build a list with ns seperate element x, divided by one y
-buildseq ns x y = concat $ intersperse [y] (map (\n->build n x) ns) 
+-- build a 2d-list with ns seperate element x
+-- build x [1,0,2] = [[x],[],[x,x]]
+buildseq      :: a -> [Int] -> [[a]]
+buildseq x ns = map (\n->build n x) ns
+
 
 data Disc = Un|Oc|Va
             deriving (Show,Read,Eq)
@@ -72,9 +75,30 @@ noname (v,h) = createDisc (length h) (length v)
 uncertainty :: [[Disc]] -> Int
 uncertainty = count2d Un 
 
+-- insert 2nd list to 1st list in middle
+-- merge [x1,x2,x3] [y1,y2,y3] = [x1,y1,x2,y2,x3]
+merge                  :: [a] -> [a] -> [a]
+merge []        _      = []
+merge (x:xs)    []     = [x]
+merge [x]       (y:ys) = [x]
+merge (x:x':xs) (y:ys) = x:y:(merge (x':xs) ys)
+
+-- solve x_0+x_1+...+x_m = n 
+-- where x_1...x_(m-1) >0 and x_0,x_m >= 0
+intpartition     :: Int -> Int -> [[Int]]
+intpartition n m = map fstval $
+                     filter (\s -> sum s <= n) $
+                       nest (\z -> concat $ map addval z) intval (m-1)
+                       where intval = map (\x->[x]) [0..n]   -- [[0],[1]..[n]]
+                             addval = \s -> map (:s) [1..n]  -- map add [1..n] to head of list
+                             fstval = \xs -> (n-sum xs):xs   -- add (n-sum xs) to head of list
+
 -- generate a list of [Disc], which contain n elements and satisfy *scan* ds = seq
+-- generate 5 [1,2] = [[Oc,Va,Oc,Oc,Va],[Oc,Va,Va,Oc,Oc],[Va,Oc,Va,Oc,Oc]]
 generate       :: Int -> Sequence -> [[Disc]]
-generate n sq = [[Oc,Va,Oc,Oc,Va],[Oc,Va,Va,Oc,Oc],[Va,Oc,Va,Oc,Oc]]
+generate n sq = map (\xss -> concat $ merge xss ocss) vasss
+                  where vasss = map (buildseq Va) (intpartition (n - sum sq) (length sq))
+                        ocss  = buildseq Oc sq
 
 -- zip two [Disc] with discAnd logic
 -- to see the common part or contradiction!
