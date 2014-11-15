@@ -71,15 +71,22 @@ noname (v,h) = createDisc (length h) (length v)
 uncertainty :: [[Disc]] -> Int
 uncertainty = count2d Un 
 
+-- zip two [Disc] with discAnd logic
+-- to see the common part or contradiction!
+-- Often, 1st param is the known,
+--        2nd param is the test one, for currying easily
+validate  :: [Disc] -> [Disc] -> Maybe [Disc]
+validate  =  zipWithM discAnd
+
 applyRule :: Sequence -> [Disc] -> Maybe [Disc]
-applyRule []  ds = zipWithM discAnd ds (build n Va) where n = length ds
+applyRule []  ds = validate ds (build n Va) where n = length ds
 applyRule [m] ds
-  | m == 0  = zipWithM discAnd ds (build n Va)
-  | m == n  = zipWithM discAnd ds (build n Oc)
-  | 2*m > n = zipWithM discAnd ds (build (n-m) Un ++ build (2*m-n) Oc ++ build (n-m) Un ) 
+  | m == 0  = validate ds (build n Va)
+  | m == n  = validate ds (build n Oc)
+  | 2*m > n = validate ds (build (n-m) Un ++ build (2*m-n) Oc ++ build (n-m) Un ) 
     where n = length ds
 applyRule seq ds
-  | sum seq + length seq - 1 == n = zipWithM discAnd ds (buildseq seq Oc Va) where n = length ds
+  | sum seq + length seq - 1 == n = validate ds (buildseq seq Oc Va) where n = length ds
 
 
 partialFill :: ([Sequence], [[Disc]]) -> [Maybe [Disc]]
