@@ -86,6 +86,8 @@ seqsHor1 = createSeqs [[3],[1,1,1],[5],[3],[1,1]]
 seqsVer1 = createSeqs [[2],[1,3],[4],[1,3],[2]]
 hs1      = (seqsHor1,discSmall)
 vs1      = (seqsVer1,discSmall)
+hsM1      = (seqsHor1,Just discSmall)
+vsM1      = (seqsVer1,Just discSmall)
 discCor1 = undefined
 
 
@@ -94,6 +96,10 @@ noname (v,h) = createDisc (length h) (length v)
 
 uncertainty :: [[Disc]] -> Int
 uncertainty = count2d Un 
+
+transform            :: Maybe [[Disc]] -> Maybe [[Disc]]
+transform Nothing    = Nothing
+transform (Just dss) = Just (transpose dss)
 
 -- insert 2nd list to 1st list in middle
 -- merge [x1,x2,x3] [y1,y2,y3] = [x1,y1,x2,y2,x3]
@@ -145,18 +151,22 @@ applyRule [m] ds
 -- for complex situation, generate a list, validate them, then evidence them.
 applyRule seq ds
   | sum seq + length seq - 1 <= n = foldl evidenceM Nothing (map (validate ds) (generate n seq))
+  | otherwise = Nothing
     where n = length ds
+
 
 partialFill :: ([Sequence], [[Disc]]) -> [Maybe [Disc]]
 partialFill = uncurry . zipWith $ applyRule
 
-reduceState :: ([Sequence], [[Disc]]) -> ([Sequence], [Maybe [Disc]])
-reduceState x = ((fst x), partialFill x)
+reduceState :: ([Sequence], [[Disc]]) -> ([Sequence], Maybe [[Disc]])
+reduceState x = ((fst x), sequence (partialFill x))
 
-{-
-solve ((hr,g):(vr,gt):[]) 
-  | uncertainty g == 0 = g
-  | otherwise          = solve $ [(vr, transpose . snd $ result), result] 
+solve :: [([Sequence], Maybe [[Disc]])] -> Maybe [[Disc]]
+solve [(_,Nothing),_] = Nothing
+solve [_,(_,Nothing)] = Nothing
+solve [(hr,Just g),(vr,gt)]
+  | uncertainty g == 0 = Just g
+  | otherwise          = solve $ [(vr, transform . snd $ result), result] 
                             where result = reduceState (hr,g)
--}
+
 
