@@ -141,7 +141,6 @@ applyRule []  ds = validate ds (build Va n) where n = length ds
 applyRule [m] ds
   | m == 0  = validate ds (build Va n)
   | m == n  = validate ds (build Oc n)
-  | 2*m > n = validate ds (build Un (n-m) ++ build Oc (2*m-n) ++ build Un (n-m) ) 
     where n = length ds
 -- for complex situation, generate a list, validate them, then evidence them.
 applyRule seq ds
