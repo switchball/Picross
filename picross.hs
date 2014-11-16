@@ -52,6 +52,12 @@ discOr Oc Oc = Oc
 discOr Va Va = Va
 discOr _  _  = Un
 
+discXor :: Disc -> Disc -> Flag
+discXor Un Un = False
+discXor Va Va = False
+discXor Oc Oc = False
+discXor _  _  = True
+
 createDisc :: Int -> Int -> [[Disc]]
 createDisc m = take m . repeat . createDisc1d
 
@@ -67,6 +73,7 @@ createSeqs =  id
 type Sequence = [Int]
 type Sequences = [[Int]]
 
+type Flag = Bool
 
 uncertainty :: [[Disc]] -> Int
 uncertainty = count2d Un 
@@ -156,7 +163,7 @@ reduceState x = ((fst x), id (partialFill x))
 
 within                    :: Int -> (t -> Bool) -> [t] -> t
 within maxiter tolfunc (x:xs)
-  | maxiter == 0          = x
+  | maxiter == 1          = x
   | tolfunc x             = x
   | otherwise             = within (maxiter-1) tolfunc xs
 
@@ -164,7 +171,7 @@ solveNew                  :: [[Sequence]] -> Maybe [[Disc]]
 solveNew [hs, vs]         =  solvePartial [hs, vs] $ createDisc (length hs) (length vs)
 
 solvePartial              :: [[Sequence]] -> [[Disc]] -> Maybe [[Disc]]
-solvePartial [hs, vs] dss =  snd $ within 100 (goalCheck hs)
+solvePartial [hs, vs] dss =  snd $ within 10 (goalCheck hs)
                                           (stream (cycle [hs, vs]) (hs, Just dss))
 
 goalCheck                         :: [Sequence] -> ([Sequence], Maybe [[Disc]]) -> Bool
@@ -172,18 +179,35 @@ goalCheck targetSeqs (seqs, mdss) = seqs == targetSeqs
                                     && case mdss of Nothing -> True
                                                     (Just dss) -> uncertainty dss == 0
 
+fillWithFlags :: [Flag] -> [Sequence] -> [[Disc]] -> Maybe [[Disc]]
+fillWithFlags fs qs dss = sequence (zipWith3 (\f q ds -> if f then (applyRule q ds) else (Just ds)) fs qs dss) 
+
 --stream
 stream :: [[Sequence]] -> ([Sequence], Maybe [[Disc]]) -> [([Sequence], Maybe [[Disc]])]
-stream cseqss x@(seqs, Nothing)  = x:[]
-stream cseqss x@(seqs, Just dss) = x:(stream (tail cseqss) 
-                                              ((head cseqss), 
-                                                partialFill ((head cseqss), transpose dss) ) )
+stream cseqss ins = map snd (instream cseqss (flag0, ins))
+
+instream :: [[Sequence]] -> ([Flag], ([Sequence], Maybe [[Disc]])) -> [([Flag], ([Sequence], Maybe [[Disc]]))]
+instream cseqss x@(flags, (seqs, Nothing))  = x:[]
+instream cseqss x@(flags, (seqs, Just dss)) = 
+  x:(instream (tail cseqss) 
+              (newflags,   ( (head cseqss), result ) ) )
+  where result = fillWithFlags flags (head cseqss) (transpose dss)
+        newflags = case result of (Just newdiscss) -> diffVer dss newdiscss
+                                  otherwise -> (repeat False)
 {-
 stream :: [[Sequence]] -> Maybe [[Disc]] -> [Maybe [[Disc]]]
 stream cseqss mdss@(Nothing)  = mdss:[]
 stream cseqss mdss@(Just dss) = mdss:(stream (tail cseqss) 
                                              (partialFill ((head cseqss), transpose dss) ) )-}
 
+diff :: [[Disc]] -> [[Disc]] -> [[Flag]]
+diff =  zipWith (zipWith discXor)
+
+diffHor :: [[Disc]] -> [[Disc]] -> [Flag]
+diffHor x y = map or (diff x y)
+
+diffVer :: [[Disc]] -> [[Disc]] -> [Flag]
+diffVer x y = map or (transpose (diff x y))
 
 solve :: [([Sequence], Maybe [[Disc]])] -> Maybe [[Disc]]
 solve [(_,Nothing),_] = Nothing
@@ -210,6 +234,8 @@ seq111 = createSeq [1,1,1]
 
 disc1d = createDisc1d 5
 disc2d = createDisc 3 3
+
+flag0  = (repeat True)
 
 discSmall  = createDisc 5 5
 discMedium = createDisc 10 10
