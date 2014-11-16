@@ -167,14 +167,52 @@ applyRule seq ds
     where n = length ds
 
 -- partialFill take a state, and produce a list of [Disc] gauss
-partialFill :: ([Sequence], [[Disc]]) -> [Maybe [Disc]]
-partialFill = uncurry . zipWith $ applyRule
+-- Notice that if one of the (Maybe [Disc]) is Nothing, 
+--   the whole (Maybe [[Disc]]) will be Nothing.
+partialFill :: ([Sequence], [[Disc]]) -> Maybe [[Disc]]
+partialFill = sequence . (uncurry . zipWith $ applyRule)
+
+partialFillM :: ([Sequence], Maybe [[Disc]]) -> Maybe [[Disc]]
+partialFillM =  undefined
 
 -- reduceState map a state to another inferred state, it use partialFill method,
--- Notice if one of the (Maybe [Disc]) is Nothing, 
+-- Notice that if one of the (Maybe [Disc]) from partialFill is Nothing,
 --   the whole (Maybe [[Disc]]) will be Nothing.
 reduceState :: ([Sequence], [[Disc]]) -> ([Sequence], Maybe [[Disc]])
-reduceState x = ((fst x), sequence (partialFill x))
+reduceState x = ((fst x), id (partialFill x))
+
+
+within                    :: (t -> Bool) -> [t] -> t
+within tolfunc (x:xs)
+  | tolfunc x             = x
+  | otherwise             = within tolfunc xs
+
+solveNew                  :: [[Sequence]] -> Maybe [[Disc]]
+solveNew [hs, vs]         =  solvePartial [hs, vs] $ createDisc (length hs) (length vs)
+
+solvePartial              :: [[Sequence]] -> [[Disc]] -> Maybe [[Disc]]
+solvePartial [hs, vs] dss =  snd $ 
+                             within (\(seqs, mdss) -> hs == seqs 
+                                    && case mdss of Nothing -> True
+                                                    (Just dss) -> uncertainty dss == 0)
+                                    (stream (cycle [hs, vs]) (hs, Just dss))
+
+goalCheck                         :: [Sequence] -> ([Sequence], Maybe [[Disc]]) -> Bool
+goalCheck targetSeqs (seqs, mdss) = seqs == targetSeqs 
+                                    && case mdss of Nothing -> True
+                                                    (Just dss) -> uncertainty dss == 0
+
+--stream
+stream :: [[Sequence]] -> ([Sequence], Maybe [[Disc]]) -> [([Sequence], Maybe [[Disc]])]
+stream cseqss x@(seqs, Nothing)  = x:[]
+stream cseqss x@(seqs, Just dss) = x:(stream (tail cseqss) 
+                                              ((head cseqss), 
+                                                partialFill ((head cseqss), transpose dss) ) )
+{-
+stream :: [[Sequence]] -> Maybe [[Disc]] -> [Maybe [[Disc]]]
+stream cseqss mdss@(Nothing)  = mdss:[]
+stream cseqss mdss@(Just dss) = mdss:(stream (tail cseqss) 
+                                             (partialFill ((head cseqss), transpose dss) ) )-}
 
 
 solve :: [([Sequence], Maybe [[Disc]])] -> Maybe [[Disc]]
