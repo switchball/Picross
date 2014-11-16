@@ -28,7 +28,12 @@ buildseq x ns = map (build x) ns
 
 
 data Disc = Un|Oc|Va
-            deriving (Show,Read,Eq)
+            deriving (Read,Eq)
+
+instance Show Disc where
+  show Un = "?"
+  show Oc = "o"
+  show Va = "."
 
 discAnd :: Disc -> Disc -> Maybe Disc
 --discAnd Nothing _ = Nothing
@@ -188,7 +193,14 @@ solve [(hr,Just g),(vr,gt)]
   | otherwise          = solve $ [(vr, transform . snd $ result), result] 
                             where result = reduceState (hr,g)
 
+data Graph = Graph (Maybe [[Disc]])
 
+instance Show Graph where
+  show (Graph Nothing)         = "NOTHING"
+  show (Graph (Just[]))        = ""
+  show (Graph (Just (ds:dss))) = "| " ++ line ds ++ "|\n" ++ show (Graph (Just dss))
+    where line [] = ""
+          line (d:ds) = show (d) ++ " " ++ line (ds)
 
 seq0   = createSeq [0]
 seq3   = createSeq [3]
@@ -203,11 +215,11 @@ discSmall  = createDisc 5 5
 discMedium = createDisc 10 10
 -- == Test Case == --
 {- Case No.1 Sprite
-   ***
-  * * *
-  *****
-   * *
-   * *
+| . o o o . |
+| o . o . o |
+| o o o o o |
+| . o o o . |
+| . o . o . |
 -}
 seqsHor1 = createSeqs [[3],[1,1,1],[5],[3],[1,1]]
 seqsVer1 = createSeqs [[2],[1,3],[4],[1,3],[2]]
@@ -222,11 +234,11 @@ discCor1 = [[Va,Oc,Oc,Oc,Va],
             [Va,Oc,Va,Oc,Va]]
 
 {- Case No.2 Snow 
-    *  
-  ** **
-   * * 
-  ** **
-    *  
+| . . o . . |
+| o o . o o |
+| . o . o . |
+| o o . o o |
+| . . o . . |
 -}
 seqsHor2 = createSeqs [[1],[2,2],[1,1],[2,2],[1]]
 seqsVer2 = createSeqs [[1,1],[3],[1,1],[3],[1,1]]
@@ -240,12 +252,17 @@ discCor2 = [[Va,Va,Oc,Va,Va],
             [Oc,Oc,Va,Oc,Oc],
             [Va,Va,Oc,Va,Va]]
 
-{- Case No.3 Snow 
-    *  
-  ** **
-   * * 
-  ** **
-    *  
+{- Case No.3 Box 
+| o o o o o o o o o o |
+| o . . . . . . . . o |
+| o . . . . . . . . o |
+| o . . . o o . . . o |
+| o . . . o o . . . o |
+| o . . . o o . . . o |
+| o . . . o o . . . o |
+| o . . . . . . . . o |
+| o . . . . . . . . o |
+| o o o o o o o o o o |
 -}
 seqsHor3 = createSeqs [[10],[1,1],[1,1],[1,2,1],[1,2,1],[1,2,1],[1,2,1],[1,1],[1,1],[10]]
 seqsVer3 = createSeqs [[10],[1,1],[1,1],[1,1],[1,4,1],[1,4,1],[1,1],[1,1],[1,1],[10]]
@@ -255,12 +272,17 @@ hsM3     = (seqsHor3,Just discMedium)
 vsM3     = (seqsVer3,Just discMedium)
 discCor3 = undefined
 
-{- Case No.4 Snow 
-    *  
-  ** **
-   * * 
-  ** **
-    *  
+{- Case No.4 Unknown 
+| . . . . . . . . . . |
+| ? o o ? . . . . . o |
+| ? o o ? . . . o o o |
+| . . o o o o o o o o |
+| o o o o o o o o o o |
+| o o o o o o o o o o |
+| . . o o o o o o o o |
+| ? o o ? . . . o o o |
+| ? o o ? . . . . . o |
+| . . . . . . . . . . |
 -}
 seqsHor4 = createSeqs [[1,2,1],[2,2,2],[8],[6],[4],[4],[4],[6],[6],[8]]
 seqsVer4 = createSeqs [[0],[3,1],[3,3],[8],[10],[10],[8],[3,3],[3,1],[0]]
