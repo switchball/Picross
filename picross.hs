@@ -293,8 +293,22 @@ hsM4     = (seqsHor4,Just discMedium)
 vsM4     = (seqsVer4,Just discMedium)
 discCor4 = undefined
 
-{- Case No.4 Heart 
-
+{- Case No.5 Heart 
+| . . . . . . . . . . . . . . . |
+| . . o o o . . . . . o o o . . |
+| . o o o o o . . . o o . o o . |
+| . o o o o o o . o o o o . o . |
+| o o o o o o o o o o o o o o o |
+| o o . o o . o . o o . o . o o |
+| o o . o . . . . . o . o . o o |
+| . o . o o . . . o o . o . o . |
+| . o . o o o . o o o . . . o . |
+| . . o o o o o o o o o o o . . |
+| . . . o o o o o o o o o . . . |
+| . . . . o o o o o o o . . . . |
+| . . . . . o o o o o . . . . . |
+| . . . . . . o o o . . . . . . |
+| . . . . . . . o . . . . . . . |
 -}
 seqsHor5 = createSeqs [[0],[3,3],[5,2,2],[6,4,1],[15],[2,2,1,2,1,2],[2,1,1,1,2],
                        [1,2,2,1,1],[1,3,3,1],[11],[9],[7],[5],[3],[1]]
