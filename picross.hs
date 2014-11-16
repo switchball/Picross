@@ -15,6 +15,8 @@ nest2 g b a n
 
 count x xs = length $ filter (==x) xs
 
+counti x xs = length $ filter (/=x) xs
+
 count2d x xss = sum $ map (count x) xss
 
 -- build a list with n element x
@@ -170,7 +172,15 @@ goalCheck targetSeqs (seqs, mdss) = seqs == targetSeqs
 fillWithFlags :: [Flag] -> [Sequence] -> [[Disc]] -> Maybe [[Disc]]
 fillWithFlags fs qs dss = sequence (zipWith3 
                             (\f q ds -> if f then (applyRule q ds) else (Just ds))
-                             fs qs dss) 
+                             fs qs dss)
+                          where -- Note: small heuristic value does not mean easy to calculate
+                            n         = length (dss!!0)
+                            heuristic = zipWith3 (\f q ds->if f then (n-sum q)^(length q)`div`(1+counti Un ds) else 0) fs qs dss
+                            inf       = foldl min (2^31) (filter (>0) heuristic)
+                            sup       = inf * 100
+                            filtered  = map (\x-> x<=sup) heuristic
+                            chosen    = zipWith (&&) fs filtered
+
 
 --stream
 stream :: [[Sequence]] -> ([Sequence], Maybe [[Disc]]) -> [([Sequence], Maybe [[Disc]])]
