@@ -1,4 +1,5 @@
 import Data.List (transpose, intersperse, intercalate)
+import Data.Char
 import Control.Monad
 
 nest :: (t -> t) -> t -> Int -> t
@@ -154,11 +155,14 @@ within maxiter tolfunc (x:xs)
   | tolfunc x             = x
   | otherwise             = within (maxiter-1) tolfunc xs
 
+fastcheck                 :: [[Sequence]] -> Int
+fastcheck [hs, vs]        =  sum (concat hs) - sum (concat vs) 
+
 solveNew                  :: [[Sequence]] -> Maybe [[Disc]]
 solveNew [hs, vs]         =  solvePartial [hs, vs] $ createDisc (length hs) (length vs)
 
 solvePartial              :: [[Sequence]] -> [[Disc]] -> Maybe [[Disc]]
-solvePartial [hs, vs] dss =  snd $ within 10 (goalCheck hs)
+solvePartial [hs, vs] dss =  snd $ within 100 (goalCheck hs)
                                           (stream (cycle [hs, vs]) (hs, Just dss))
 
 goalCheck                         :: [Sequence] -> ([Sequence], Maybe [[Disc]]) -> Bool
@@ -338,4 +342,108 @@ vs5      = (seqsVer5,discLarge)
 hsM5     = (seqsHor5,Just discLarge)
 vsM5     = (seqsVer5,Just discLarge)
 discCor5 = undefined
+
+
+{- Case No.6 
+| o o o o o o o o o o o o o o o |
+| o . . o . o . . . o . o . . o |
+| o . . o o o . . . o o o . . o |
+| o o o o . o . . . o . o o o o |
+| o . o . o o o o o o o . o . o |
+| o o o o o . . . . . o o o o o |
+| o . . . o . o o o . o . . . o |
+| o . . . o . o . o . o . . . o |
+| o . . . o . o o o . o . . . o |
+| o o o o o . . . . . o o o o o |
+| o . o . o o o o o o o . o . o |
+| o o o o . o . . . o . o o o o |
+| o . . o o o . . . o o o . . o |
+| o . . o . o . . . o . o . . o |
+| o o o o o o o o o o o o o o o |
+-}
+seqsHor6 = createSeqs [[15],[1,1,1,1,1,1],[1,3,3,1],[4,1,1,4],[1,1,7,1,1],[5,5],
+                       [1,1,3,1,1],[1,1,1,1,1,1],[1,1,3,1,1],[5,5],[1,1,7,1,1],
+                       [4,1,1,4],[1,3,3,1],[1,1,1,1,1,1],[15]]
+seqsVer6 = seqsHor6
+p6       = [seqsHor6,seqsVer6]
+discCor6 = undefined
+
+
+{- Case No.7 Superman
+| . o o o o o o o o . |
+| o o o . . . . o o o |
+| o o . o o o o . o o |
+| o o . o o o o o o o |
+| o o o . . . o o o o |
+| . o o o o o . o o . |
+| . o o . o o . o o . |
+| . . o o . . o o . . |
+| . . o o o o o o . . |
+| . . . o o o o . . . |
+-}
+seqsHor7 = createSeqs [[8],[3,3],[2,4,2],[2,7],[3,4],[5,2],[2,2,2],[2,2],[6],[4]]
+seqsVer7 = createSeqs [[4],[7],[2,5],[1,2,1,3],[1,2,2,2],[1,2,2,2],[1,3,3],[2,6],[7],[4]]
+p7       = [seqsHor7,seqsVer7]
+discCor7 = undefined
+
+{- Case No.8 Detective
+| . . . . . o o o o o . . . . . |
+| . . . o o o . . . o o o . . . |
+| . . . . o o o o o o o . . . . |
+| . . . . o o o . o o o . . . . |
+| . . . . o . . . . . o . . . . |
+| . . . . o . . o . . o . . . . |
+| . . o o o o . . . o o o o . . |
+| . o o . . o o . o o . . o o . |
+| o o o . o o o . o o o . o o o |
+| o o . . o . o . o . o . o o o |
+| o o . o o . o o o . o . o o . |
+| . o . o o . o . o . o o o . . |
+| . o o o o o o . o o o o . . . |
+| . . o o . o . . . o . o o . . |
+| . o o o o o . . . o o o o o . |
+-}
+seqsHor8 = createSeqs [[5],[3,3],[7],[3,3],[1,1],[1,1,1],[4,4],[2,2,2,2],[3,3,3,3],
+                       [2,1,1,1,1,3],[2,2,3,1,2],[1,2,1,1,3],[6,4],[2,1,1,2],[5,5]]
+seqsVer8 = createSeqs [[3],[6,1],[3,3],[1,1,5],[6,5,1],[4,3,3],[1,2,6],[1,1,1,1],
+                       [1,2,6],[4,3,3],[6,5,1],[1,1,4],[6,2],[4,1],[2]]
+p8       = [seqsHor8,seqsVer8]
+discCor8 = undefined
+
+
+{- Case No.9 Squirrel
+| . . . . . . o . . . o o o o . |
+| . . o o o o o . . o o . . o o |
+| . o o o o o . . o o o . o o o |
+| o o o . o o . . o o . o . . o |
+| o o o o o o . . o o . o . o o |
+| . o o o o o o . o o o . o o o |
+| . . . o o o o . o o o . o o o |
+| . . o o . o o o o o o o o . o |
+| . o o . o o o o o o o o o . o |
+| . . . o o o o o o o o o . o . |
+| . . o o o o o o o o o o . o . |
+| . . o o o o o o o o o . o . . |
+| . . . o . o o o o . . o . . . |
+| . . . . o . o o o o o . . . . |
+| . . . o o o o o o . . . . . . |
+-}
+seqsHor9 = createSeqs [[1,4],[5,2,2],[5,3,3],[3,2,2,1,1],[6,2,1,2],[6,3,3],[4,3,3],
+                       [2,8,1],[2,9,1],[9,1],[10,1],[9,1],[1,4,1],[1,5],[6]]
+seqsVer9 = createSeqs [[2],[4,1],[5,2,2],[2,4,4,1],[6,4,2],[12,1],[2,10],[8],[13],
+                       [11,1],[3,7,1],[1,2,4,1],[1,1,4,1],[3,3,2],[8]]
+p9       = [seqsHor9,seqsVer9]
+discCor9 = undefined
+
+
+{- Case No.10 Where's my Home?
+
+-}
+seqsHor10 = createSeqs [[1,1,1,3],[1,1,2,3],[1,1,2,2],[2,1,4],[2,2,4],[2,4,4],
+                        [3,3,2],[2,2,3],[1,2,2,2],[9],[7,2],[6,2,2],[5,4],[5,2],
+                        [1,3,3],[1,3,4],[1,3,6],[5,4],[5,1],[5,2]]
+seqsVer10 = createSeqs [[7,12],[5,5,3],[14],[5,12],[2,11],[7],[7],[6,1],[5,2],
+                        [2,2],[3,1],[3,2],[2,2,1],[1,1,2],[1,1,5],[1,8,1],[2,6],[3],[2],[1]]
+p10       = [seqsHor10,seqsVer10]
+discCor10 = undefined
 
