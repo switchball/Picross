@@ -213,6 +213,7 @@ disc2d = createDisc 3 3
 
 discSmall  = createDisc 5 5
 discMedium = createDisc 10 10
+discLarge  = createDisc 15 15
 -- == Test Case == --
 {- Case No.1 Sprite
 | . o o o . |
@@ -291,3 +292,17 @@ vs4      = (seqsVer4,discMedium)
 hsM4     = (seqsHor4,Just discMedium)
 vsM4     = (seqsVer4,Just discMedium)
 discCor4 = undefined
+
+{- Case No.4 Heart 
+
+-}
+seqsHor5 = createSeqs [[0],[3,3],[5,2,2],[6,4,1],[15],[2,2,1,2,1,2],[2,1,1,1,2],
+                       [1,2,2,1,1],[1,3,3,1],[11],[9],[7],[5],[3],[1]]
+seqsVer5 = createSeqs [[3],[7],[4,1],[10],[5,5],[3,5],[3,5],[1,7],[3,7],[11],
+                       [4,3],[1,5,2],[2,1,1],[7],[3]]
+hs5      = (seqsHor5,discLarge)
+vs5      = (seqsVer5,discLarge)
+hsM5     = (seqsHor5,Just discLarge)
+vsM5     = (seqsVer5,Just discLarge)
+discCor5 = undefined
+
