@@ -145,21 +145,6 @@ applyRule seq ds
   | otherwise = Nothing
     where n = length ds
 
--- partialFill take a state, and produce a list of [Disc] gauss
--- Notice that if one of the (Maybe [Disc]) is Nothing, 
---   the whole (Maybe [[Disc]]) will be Nothing.
-partialFill :: ([Sequence], [[Disc]]) -> Maybe [[Disc]]
-partialFill = sequence . (uncurry . zipWith $ applyRule)
-
-partialFillM :: ([Sequence], Maybe [[Disc]]) -> Maybe [[Disc]]
-partialFillM =  undefined
-
--- reduceState map a state to another inferred state, it use partialFill method,
--- Notice that if one of the (Maybe [Disc]) from partialFill is Nothing,
---   the whole (Maybe [[Disc]]) will be Nothing.
-reduceState :: ([Sequence], [[Disc]]) -> ([Sequence], Maybe [[Disc]])
-reduceState x = ((fst x), id (partialFill x))
-
 
 within                    :: Int -> (t -> Bool) -> [t] -> t
 within maxiter tolfunc (x:xs)
@@ -179,8 +164,13 @@ goalCheck targetSeqs (seqs, mdss) = seqs == targetSeqs
                                     && case mdss of Nothing -> True
                                                     (Just dss) -> uncertainty dss == 0
 
+-- fillWithFlags take a flag list, a state, and produce a list of [Disc] guess
+-- Notice that if one of the (Maybe [Disc]) is Nothing, 
+--   the whole (Maybe [[Disc]]) will be Nothing.
 fillWithFlags :: [Flag] -> [Sequence] -> [[Disc]] -> Maybe [[Disc]]
-fillWithFlags fs qs dss = sequence (zipWith3 (\f q ds -> if f then (applyRule q ds) else (Just ds)) fs qs dss) 
+fillWithFlags fs qs dss = sequence (zipWith3 
+                            (\f q ds -> if f then (applyRule q ds) else (Just ds))
+                             fs qs dss) 
 
 --stream
 stream :: [[Sequence]] -> ([Sequence], Maybe [[Disc]]) -> [([Sequence], Maybe [[Disc]])]
@@ -209,13 +199,6 @@ diffHor x y = map or (diff x y)
 diffVer :: [[Disc]] -> [[Disc]] -> [Flag]
 diffVer x y = map or (transpose (diff x y))
 
-solve :: [([Sequence], Maybe [[Disc]])] -> Maybe [[Disc]]
-solve [(_,Nothing),_] = Nothing
-solve [_,(_,Nothing)] = Nothing
-solve [(hr,Just g),(vr,gt)]
-  | uncertainty g == 0 = Just g
-  | otherwise          = solve $ [(vr, transform . snd $ result), result] 
-                            where result = reduceState (hr,g)
 
 data Graph = Graph (Maybe [[Disc]])
 
