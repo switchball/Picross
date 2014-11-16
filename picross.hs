@@ -62,39 +62,6 @@ createSeqs =  id
 type Sequence = [Int]
 type Sequences = [[Int]]
 
-seq0   = createSeq [0]
-seq3   = createSeq [3]
-seq5   = createSeq [5]
-seq12  = createSeq [1,2]
-seq111 = createSeq [1,1,1]
-
-disc1d = createDisc1d 5
-disc2d = createDisc 3 3
-
-discSmall = createDisc 5 5
--- == Test Case == --
-{- Case No.1 Sprite
-   ***
-  * * *
-  *****
-   * *
-   * *
--}
-seqsHor1 = createSeqs [[3],[1,1,1],[5],[3],[1,1]]
-seqsVer1 = createSeqs [[2],[1,3],[4],[1,3],[2]]
-hs1      = (seqsHor1,discSmall)
-vs1      = (seqsVer1,discSmall)
-hsM1     = (seqsHor1,Just discSmall)
-vsM1     = (seqsVer1,Just discSmall)
-discCor1 = [[Va,Oc,Oc,Oc,Va],
-            [Oc,Va,Oc,Va,Oc],
-            [Oc,Oc,Oc,Oc,Oc],
-            [Va,Oc,Oc,Oc,Va],
-            [Va,Oc,Va,Oc,Va]]
-
-
---noname :: ([Sequence],[Sequence]) -> [[Disc]]
-noname (v,h) = createDisc (length h) (length v)
 
 uncertainty :: [[Disc]] -> Int
 uncertainty = count2d Un 
@@ -182,16 +149,17 @@ reduceState :: ([Sequence], [[Disc]]) -> ([Sequence], Maybe [[Disc]])
 reduceState x = ((fst x), id (partialFill x))
 
 
-within                    :: (t -> Bool) -> [t] -> t
-within tolfunc (x:xs)
+within                    :: Int -> (t -> Bool) -> [t] -> t
+within maxiter tolfunc (x:xs)
+  | maxiter == 0          = x
   | tolfunc x             = x
-  | otherwise             = within tolfunc xs
+  | otherwise             = within (maxiter-1) tolfunc xs
 
 solveNew                  :: [[Sequence]] -> Maybe [[Disc]]
 solveNew [hs, vs]         =  solvePartial [hs, vs] $ createDisc (length hs) (length vs)
 
 solvePartial              :: [[Sequence]] -> [[Disc]] -> Maybe [[Disc]]
-solvePartial [hs, vs] dss =  snd $ within (goalCheck hs)
+solvePartial [hs, vs] dss =  snd $ within 100 (goalCheck hs)
                                           (stream (cycle [hs, vs]) (hs, Just dss))
 
 goalCheck                         :: [Sequence] -> ([Sequence], Maybe [[Disc]]) -> Bool
@@ -221,3 +189,83 @@ solve [(hr,Just g),(vr,gt)]
                             where result = reduceState (hr,g)
 
 
+
+seq0   = createSeq [0]
+seq3   = createSeq [3]
+seq5   = createSeq [5]
+seq12  = createSeq [1,2]
+seq111 = createSeq [1,1,1]
+
+disc1d = createDisc1d 5
+disc2d = createDisc 3 3
+
+discSmall  = createDisc 5 5
+discMedium = createDisc 10 10
+-- == Test Case == --
+{- Case No.1 Sprite
+   ***
+  * * *
+  *****
+   * *
+   * *
+-}
+seqsHor1 = createSeqs [[3],[1,1,1],[5],[3],[1,1]]
+seqsVer1 = createSeqs [[2],[1,3],[4],[1,3],[2]]
+hs1      = (seqsHor1,discSmall)
+vs1      = (seqsVer1,discSmall)
+hsM1     = (seqsHor1,Just discSmall)
+vsM1     = (seqsVer1,Just discSmall)
+discCor1 = [[Va,Oc,Oc,Oc,Va],
+            [Oc,Va,Oc,Va,Oc],
+            [Oc,Oc,Oc,Oc,Oc],
+            [Va,Oc,Oc,Oc,Va],
+            [Va,Oc,Va,Oc,Va]]
+
+{- Case No.2 Snow 
+    *  
+  ** **
+   * * 
+  ** **
+    *  
+-}
+seqsHor2 = createSeqs [[1],[2,2],[1,1],[2,2],[1]]
+seqsVer2 = createSeqs [[1,1],[3],[1,1],[3],[1,1]]
+hs2      = (seqsHor2,discSmall)
+vs2      = (seqsVer2,discSmall)
+hsM2     = (seqsHor2,Just discSmall)
+vsM2     = (seqsVer2,Just discSmall)
+discCor2 = [[Va,Va,Oc,Va,Va],
+            [Oc,Oc,Va,Oc,Oc],
+            [Va,Oc,Va,Oc,Va],
+            [Oc,Oc,Va,Oc,Oc],
+            [Va,Va,Oc,Va,Va]]
+
+{- Case No.3 Snow 
+    *  
+  ** **
+   * * 
+  ** **
+    *  
+-}
+seqsHor3 = createSeqs [[10],[1,1],[1,1],[1,2,1],[1,2,1],[1,2,1],[1,2,1],[1,1],[1,1],[10]]
+seqsVer3 = createSeqs [[10],[1,1],[1,1],[1,1],[1,4,1],[1,4,1],[1,1],[1,1],[1,1],[10]]
+hs3      = (seqsHor3,discMedium)
+vs3      = (seqsVer3,discMedium)
+hsM3     = (seqsHor3,Just discMedium)
+vsM3     = (seqsVer3,Just discMedium)
+discCor3 = undefined
+
+{- Case No.4 Snow 
+    *  
+  ** **
+   * * 
+  ** **
+    *  
+-}
+seqsHor4 = createSeqs [[1,2,1],[2,2,2],[8],[6],[4],[4],[4],[6],[6],[8]]
+seqsVer4 = createSeqs [[0],[3,1],[3,3],[8],[10],[10],[8],[3,3],[3,1],[0]]
+hs4      = (seqsHor4,discMedium)
+vs4      = (seqsVer4,discMedium)
+hsM4     = (seqsHor4,Just discMedium)
+vsM4     = (seqsVer4,Just discMedium)
+discCor4 = undefined
