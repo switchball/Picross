@@ -191,11 +191,8 @@ solveNew                  :: [[Sequence]] -> Maybe [[Disc]]
 solveNew [hs, vs]         =  solvePartial [hs, vs] $ createDisc (length hs) (length vs)
 
 solvePartial              :: [[Sequence]] -> [[Disc]] -> Maybe [[Disc]]
-solvePartial [hs, vs] dss =  snd $ 
-                             within (\(seqs, mdss) -> hs == seqs 
-                                    && case mdss of Nothing -> True
-                                                    (Just dss) -> uncertainty dss == 0)
-                                    (stream (cycle [hs, vs]) (hs, Just dss))
+solvePartial [hs, vs] dss =  snd $ within (goalCheck hs)
+                                          (stream (cycle [hs, vs]) (hs, Just dss))
 
 goalCheck                         :: [Sequence] -> ([Sequence], Maybe [[Disc]]) -> Bool
 goalCheck targetSeqs (seqs, mdss) = seqs == targetSeqs 
