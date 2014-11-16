@@ -437,7 +437,26 @@ discCor9 = undefined
 
 
 {- Case No.10 Where's my Home?
-
+| o . . o . . . . o . . o o o . . . . . . |
+| o . . o . . . o o . o o o . . . . . . . |
+| o . . o . . . o o . o o . . . . . . . . |
+| o o . o . . . o o o o . . . . . . . . . |
+| o o . o o . o o o o . . . . . . . . . . |
+| o o . . o o o o . . . . o o o o . . . . |
+| o o o . . o o o . . . o o . . . . . . . |
+| . o o . . o o . . o o o . . . . . . . . |
+| o . o o . o o . o o . . . . . . . . . . |
+| o o o o o o o o o . . . . . . . . . . . |
+| o o o o o o o . . . . . . . o o . . . . |
+| o o o o o o . . . . . . o o . o o . . . |
+| o o o o o . . . . . . . . o o o o . . . |
+| o o o o o . . . . . . . . . o o . . . . |
+| o . o o o . . . . . . . . . o o o . . . |
+| o . o o o . . . . . . . . . o o o o . . |
+| o . o o o . . . . . . . . . o o o o o o |
+| o o o o o . . . . . . . . . . o o o o . |
+| o o o o o . . . . . . . . . . . o . . . |
+| o o o o o . . . . . . . . . . o o . . . |
 -}
 seqsHor10 = createSeqs [[1,1,1,3],[1,1,2,3],[1,1,2,2],[2,1,4],[2,2,4],[2,4,4],
                         [3,3,2],[2,2,3],[1,2,2,2],[9],[7,2],[6,2,2],[5,4],[5,2],
@@ -447,3 +466,66 @@ seqsVer10 = createSeqs [[7,12],[5,5,3],[14],[5,12],[2,11],[7],[7],[6,1],[5,2],
 p10       = [seqsHor10,seqsVer10]
 discCor10 = undefined
 
+
+{- Case No.11 Apple
+| . . . . . . . . . o . . . . . . . . . . |
+| . . . . o o o o . o . . o o o o o . . . |
+| . . . o o o o o o o . o o o o o o o . . |
+| . . o o o o o . . o o . o o o o o o o . |
+| . o . . . . . . . o . . . . . . . . . o |
+| . . . o o o o o . o . o o o o o . . . . |
+| . . o o o . o o o o o o o o o o o . . . |
+| . o o . . o o o o o o o o o o o o o . . |
+| . o . . o o o o o o o o o o o o o o . . |
+| o o . . o o o o o o o o o o o o o o o . |
+| o o . . o o o o o o o o o o o . o o o . |
+| o o . . o o o o o o o o o o o o . o o . |
+| o o . . o o o o o o o o o o o o . o o . |
+| o o . . o o o o o o o o o o o o . o o . |
+| . o . . o o o o o o o o o o o o . o . . |
+| . o o . . o o o o o o o o o o . o o . . |
+| . . o o . . o o o o o o o o . o o . . . |
+| . . . o o o . o o o o o o o o o . . . . |
+| . . . . o o o o o o o o o o o . . . . . |
+| . . . . . o o o . o o . o o . . . . . . |
+-}
+seqsHor11 = createSeqs [[1],[4,1,5],[7,7],[5,2,7],[1,1,1],[5,1,5],[3,11],[2,13],
+                        [1,14],[2,15],[2,11,3],[2,12,2],[2,12,2],[2,12,2],[1,12,1],
+                        [2,10,2],[2,8,2],[3,9],[11],[3,2,2]]
+seqsVer11 = createSeqs [[5],[1,9],[1,2,2],[2,2,2],[3,2,7,2],[3,1,9,3],[3,12,2],[2,15],
+                        [1,13],[20],[1,14],[1,14],[3,15],[3,15],[3,11,2],[3,5,4,2],
+                        [3,5,2],[2,9],[1,5],[1]]
+p11       = [seqsHor11,seqsVer11]
+discCor11 = undefined
+
+{- Case No.12 Rabbit on Acid
+| . . . . o o o o o . o o o o o . . . . . |
+| . o o o . . . . . o . . . . o o . . . . |
+| . o . . . . . . . o o o o o . o o . . . |
+| o . . o o o o . . . o o o o o . o . . . |
+| o o o o o o o o . . . o o o o . o . . . |
+| . . . . . . o o o . . o o o o . o . . . |
+| . . . . . . . . o o . . o o o . o . . . |
+| . . . . . . . . o o . . o o o . o . . . |
+| . . . . . . . . o o o . o o . . o . . . |
+| . . . . . . . . o . . . . . . o o . . . |
+| . . . . . . . o o o o o o o . . o . . . |
+| . . . . . . o . . . o . . . o . o o . . |
+| . . . . . . o . o . o . o . o . . o . . |
+| . . o . . o o . . . o . . . . o . o . . |
+| . . . . o o . o o o o o o o o . . . o . |
+| . o o o o . . o o o o . . . o . o o o o |
+| . . . o . . o . . o . . o . . . . . o . |
+| . . o o o . . . o o o . . . o . . o o o |
+| . o . . o o . o . o . o . . . . o o . . |
+| . . . o . o o o . o . o o o o o o . o . |
+-}
+seqsHor12 = createSeqs [[5,5],[3,1,2],[1,5,2],[1,4,5,1],[8,4,1],[3,4,1],[2,3,1],[2,3,1],
+                        [3,2,1],[1,2],[7,1],[1,1,1,2],[1,1,1,1,1,1],[1,2,1,1,1],[2,8,1],
+                        [4,4,1,4],[1,1,1,1,1],[3,3,1,3],[1,2,1,1,1,2],[1,3,1,6,1]]
+seqsVer12 = createSeqs [[2],[2,1,1,1],[1,1,1,1,1],[1,2,3,1],[1,2,2,2],[1,2,2,2],[1,3,3,1,1],
+                        [1,2,1,2,2],[1,6,1,2,1],[2,3,1,6],[1,2,1,6,1],[1,4,1,1,2],
+                        [1,7,1,1,1,1,1],[1,7,1,1,1],[2,5,2,2,1,1],[2,1,1,1],[10,1,2],
+                        [3,1,2],[4,1],[1,1]]
+p12       = [seqsHor12,seqsVer12]
+discCor12 = undefined
