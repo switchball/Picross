@@ -1,6 +1,7 @@
 import Data.List (transpose, intersperse, intercalate)
 import Data.Char
 import Control.Monad
+import Data.Time (getCurrentTime, diffUTCTime, NominalDiffTime)
 
 count x xs = length $ filter (==x) xs
 
@@ -61,6 +62,8 @@ type Sequence = [Int]
 type Sequences = [[Int]]
 
 type Flag = Bool
+
+
 
 uncertainty :: [[Disc]] -> Int
 uncertainty = count2d Un 
@@ -135,9 +138,17 @@ applyRule seq ds
 
 within                    :: Int -> (t -> Bool) -> [t] -> t
 within maxiter tolfunc (x:xs)
-  | maxiter == 1          = x
+  | maxiter == 0          = x
   | tolfunc x             = x
   | otherwise             = within (maxiter-1) tolfunc xs
+
+-- cutdown a stream, act like takeWhile
+cutdown                   :: Int -> (t -> Bool) -> [t] -> [t]
+cutdown _  _  []          =  []
+cutdown maxiter tolfunc (x:xs)
+  | maxiter == 0          =  [x]
+  | tolfunc x             =  [x]
+  | otherwise             =  x:(cutdown (maxiter-1) tolfunc xs)
 
 fastcheck                 :: [[Sequence]] -> Int
 fastcheck [hs, vs]        =  sum (concat hs) - sum (concat vs) 
@@ -155,6 +166,7 @@ goalCheck targetSeqs (seqs, mdss) = seqs == targetSeqs
                                                     (Just dss) -> uncertainty dss == 0
 
 -- fillWithFlags take a flag list, a state, and produce a list of [Disc] guess
+-- length of [Flag], [Sequence], [[Disc]] should be equal.
 -- Notice that if one of the (Maybe [Disc]) is Nothing, 
 --   the whole (Maybe [[Disc]]) will be Nothing.
 fillWithFlags :: [Flag] -> [Sequence] -> [[Disc]] -> Maybe [[Disc]]
@@ -176,6 +188,7 @@ fillWithFlags fs qs dss = sequence (zipWith3
 -- it feeds the within method.
 stream :: [[Sequence]] -> ([Sequence], Maybe [[Disc]]) -> [([Sequence], Maybe [[Disc]])]
 stream cseqss ins = map (snd.snd) (instream cseqss (0, (flag0, ins)))
+                    where flag0 = (replicate (length (fst ins)) True)
 
 -- inner stream have more inner temp state which the outside world does not need to know,
 -- it is the more general version than stream.
@@ -187,11 +200,12 @@ instream :: [[Sequence]] -> (Int, ([Flag], ([Sequence], Maybe [[Disc]]))) -> [(I
 instream cseqss x@(loop, (flags, (seqs, Nothing)))  = x:[]
 instream cseqss x@(loop, (flags, (seqs, Just dss))) = 
   x:(instream (tail cseqss) 
-              (loop+1, (newflags,   ( (head cseqss), result ) ) ) )
-  where result = fillWithFlags flags (head cseqss) (transpose dss)
-        newflags = if loop == 0 then (repeat True) else
+              (loop+1, (newflags,   ( hseqs, result ) ) ) )
+  where hseqs  = head cseqss
+        result = fillWithFlags flags hseqs (transpose dss)
+        newflags = if loop == 0 then (replicate (length (head (tail cseqss))) True) else
                    case result of (Just newdiscss) -> diffHor dss (transpose newdiscss)
-                                  otherwise -> (repeat False)
+                                  otherwise -> (replicate 25 False)
 {-
 stream :: [[Sequence]] -> Maybe [[Disc]] -> [Maybe [[Disc]]]
 stream cseqss mdss@(Nothing)  = mdss:[]
@@ -207,6 +221,43 @@ diffHor x y = map or (diff x y)
 diffVer :: [[Disc]] -> [[Disc]] -> [Flag]
 diffVer x y = map or (transpose (diff x y))
 
+timing :: [[Sequence]] -> IO NominalDiffTime
+timing [hs,vs] = do start <- getCurrentTime
+                    putStrLn $ show $ Graph $ solveNew [hs,vs]
+                    stop  <- getCurrentTime
+                    return $ diffUTCTime stop start
+
+trace :: [[Sequence]] -> IO ()
+trace [hs, vs] = do
+    putInStreams (cutdown 100 ((goalCheck hs).snd.snd) state)
+    where state = instream (cycle [hs, vs]) (0, (flag0, (hs, Just (transpose dss))))
+          dss   = createDisc (length hs) (length vs)
+          flag0 = (replicate (length hs) True)
+
+putInStreams :: [(Int, ([Flag], ([Sequence], Maybe [[Disc]])))] -> IO ()
+putInStreams [] = putStrLn "[END]"
+putInStreams (insm:insms) = 
+  do putStrLn ("loop [#" ++ (show loopid) ++ "]")
+     putStrLn ("< " ++ (showFlags flags))
+     putDisc  graph
+     putInStreams insms
+     where loopid = fst insm
+           flags  = (fst.snd) insm
+           seqs   = (fst.snd.snd) insm
+           graph  = (snd.snd.snd) insm
+           showFlags :: [Flag] -> String
+           showFlags []     = ">"
+           showFlags (f:fs) = (if f then "T " else "F ") ++ (showFlags fs)
+
+
+putStreams :: [([Sequence], Maybe [[Disc]])] -> IO ()
+putStreams [] = putStrLn "[END]"
+putStreams (stream:streams) = do putStrLn (show (fst stream))
+                                 putDisc (snd stream)
+                                 putStreams streams
+
+putDisc :: Maybe [[Disc]] -> IO ()
+putDisc dss = do putStrLn (show (Graph dss))
 
 data Graph = Graph (Maybe [[Disc]])
 
@@ -226,13 +277,12 @@ seq111 = createSeq [1,1,1]
 disc1d = createDisc1d 5
 disc2d = createDisc 3 3
 
-flag0  = (repeat True)
 
 discSmall  = createDisc 5 5
 discMedium = createDisc 10 10
 discLarge  = createDisc 15 15
 -- == Test Case == --
-{- Case No.1 Sprite
+{- Case No.1 Sprite [0.01s]
 | . o o o . |
 | o . o . o |
 | o o o o o |
@@ -241,17 +291,14 @@ discLarge  = createDisc 15 15
 -}
 seqsHor1 = createSeqs [[3],[1,1,1],[5],[3],[1,1]]
 seqsVer1 = createSeqs [[2],[1,3],[4],[1,3],[2]]
-hs1      = (seqsHor1,discSmall)
-vs1      = (seqsVer1,discSmall)
-hsM1     = (seqsHor1,Just discSmall)
-vsM1     = (seqsVer1,Just discSmall)
+p1       = [seqsHor1,seqsVer1]
 discCor1 = [[Va,Oc,Oc,Oc,Va],
             [Oc,Va,Oc,Va,Oc],
             [Oc,Oc,Oc,Oc,Oc],
             [Va,Oc,Oc,Oc,Va],
             [Va,Oc,Va,Oc,Va]]
 
-{- Case No.2 Snow 
+{- Case No.2 Snow [0.01s]
 | . . o . . |
 | o o . o o |
 | . o . o . |
@@ -260,17 +307,14 @@ discCor1 = [[Va,Oc,Oc,Oc,Va],
 -}
 seqsHor2 = createSeqs [[1],[2,2],[1,1],[2,2],[1]]
 seqsVer2 = createSeqs [[1,1],[3],[1,1],[3],[1,1]]
-hs2      = (seqsHor2,discSmall)
-vs2      = (seqsVer2,discSmall)
-hsM2     = (seqsHor2,Just discSmall)
-vsM2     = (seqsVer2,Just discSmall)
+p2       = [seqsHor2,seqsVer2]
 discCor2 = [[Va,Va,Oc,Va,Va],
             [Oc,Oc,Va,Oc,Oc],
             [Va,Oc,Va,Oc,Va],
             [Oc,Oc,Va,Oc,Oc],
             [Va,Va,Oc,Va,Va]]
 
-{- Case No.3 Box 
+{- Case No.3 Box [0.05s]
 | o o o o o o o o o o |
 | o . . . . . . . . o |
 | o . . . . . . . . o |
@@ -284,13 +328,10 @@ discCor2 = [[Va,Va,Oc,Va,Va],
 -}
 seqsHor3 = createSeqs [[10],[1,1],[1,1],[1,2,1],[1,2,1],[1,2,1],[1,2,1],[1,1],[1,1],[10]]
 seqsVer3 = createSeqs [[10],[1,1],[1,1],[1,1],[1,4,1],[1,4,1],[1,1],[1,1],[1,1],[10]]
-hs3      = (seqsHor3,discMedium)
-vs3      = (seqsVer3,discMedium)
-hsM3     = (seqsHor3,Just discMedium)
-vsM3     = (seqsVer3,Just discMedium)
+p3       = [seqsHor3,seqsVer3]
 discCor3 = undefined
 
-{- Case No.4 Unknown 
+{- Case No.4 Unknown [0.06s]
 | . . . . . . . . . . |
 | ? o o ? . . . . . o |
 | ? o o ? . . . o o o |
@@ -304,13 +345,10 @@ discCor3 = undefined
 -}
 seqsHor4 = createSeqs [[1,2,1],[2,2,2],[8],[6],[4],[4],[4],[6],[6],[8]]
 seqsVer4 = createSeqs [[0],[3,1],[3,3],[8],[10],[10],[8],[3,3],[3,1],[0]]
-hs4      = (seqsHor4,discMedium)
-vs4      = (seqsVer4,discMedium)
-hsM4     = (seqsHor4,Just discMedium)
-vsM4     = (seqsVer4,Just discMedium)
+p4       = [seqsHor4,seqsVer4]
 discCor4 = undefined
 
-{- Case No.5 Heart 
+{- Case No.5 Heart [0.29s]
 | . . o o o . . . . . o o o . . |
 | . o o o o o . . . o o . o o . |
 | . o o o o o o . o o o o . o . |
@@ -330,11 +368,12 @@ seqsHor5 = createSeqs [[3,3],[5,2,2],[6,4,1],[15],[2,2,1,2,1,2],[2,1,1,1,2],
                        [1,2,2,1,1],[1,3,3,1],[11],[9],[7],[5],[3],[1]]
 seqsVer5 = createSeqs [[3],[7],[4,1],[10],[5,5],[3,5],[3,5],[1,7],[3,7],[11],
                        [4,3],[1,5,2],[2,1,1],[7],[3]]
+p5       = [seqsHor5,seqsVer5]
 disc5    = createDisc 14 15
 discCor5 = undefined
 
 
-{- Case No.6 
+{- Case No.6 [7.60s]
 | o o o o o o o o o o o o o o o |
 | o . . o . o . . . o . o . . o |
 | o . . o o o . . . o o o . . o |
@@ -359,7 +398,7 @@ p6       = [seqsHor6,seqsVer6]
 discCor6 = undefined
 
 
-{- Case No.7 Superman
+{- Case No.7 Superman [0.04s]
 | . o o o o o o o o . |
 | o o o . . . . o o o |
 | o o . o o o o . o o |
@@ -376,7 +415,7 @@ seqsVer7 = createSeqs [[4],[7],[2,5],[1,2,1,3],[1,2,2,2],[1,2,2,2],[1,3,3],[2,6]
 p7       = [seqsHor7,seqsVer7]
 discCor7 = undefined
 
-{- Case No.8 Detective
+{- Case No.8 Detective [0.53s]
 | . . . . . o o o o o . . . . . |
 | . . . o o o . . . o o o . . . |
 | . . . . o o o o o o o . . . . |
@@ -401,7 +440,7 @@ p8       = [seqsHor8,seqsVer8]
 discCor8 = undefined
 
 
-{- Case No.9 Squirrel
+{- Case No.9 Squirrel [0.13s]
 | . . . . . . o . . . o o o o . |
 | . . o o o o o . . o o . . o o |
 | . o o o o o . . o o o . o o o |
@@ -426,7 +465,7 @@ p9       = [seqsHor9,seqsVer9]
 discCor9 = undefined
 
 
-{- Case No.10 Where's my Home?
+{- Case No.10 Where's my Home? [1.90s]
 | o . . o . . . . o . . o o o . . . . . . |
 | o . . o . . . o o . o o o . . . . . . . |
 | o . . o . . . o o . o o . . . . . . . . |
@@ -457,7 +496,7 @@ p10       = [seqsHor10,seqsVer10]
 discCor10 = undefined
 
 
-{- Case No.11 Apple
+{- Case No.11 Apple [0.39s]
 | . . . . . . . . . o . . . . . . . . . . |
 | . . . . o o o o . o . . o o o o o . . . |
 | . . . o o o o o o o . o o o o o o o . . |
@@ -488,7 +527,7 @@ seqsVer11 = createSeqs [[5],[1,9],[1,2,2],[2,2,2],[3,2,7,2],[3,1,9,3],[3,12,2],[
 p11       = [seqsHor11,seqsVer11]
 discCor11 = undefined
 
-{- Case No.12 Rabbit on Acid
+{- Case No.12 Rabbit on Acid [>3 min]
 | . . . . o o o o o . o o o o o . . . . . |
 | . o o o . . . . . o . . . . o o . . . . |
 | . o . . . . . . . o o o o o . o o . . . |
