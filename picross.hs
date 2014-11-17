@@ -139,6 +139,14 @@ within maxiter tolfunc (x:xs)
   | tolfunc x             = x
   | otherwise             = within (maxiter-1) tolfunc xs
 
+-- cutdown a stream, act like takeWhile
+cutdown                   :: Int -> (t -> Bool) -> [t] -> [t]
+cutdown _  _  []          =  []
+cutdown maxiter tolfunc (x:xs)
+  | maxiter == 1          =  [x]
+  | tolfunc x             =  [x]
+  | otherwise             =  x:(cutdown (maxiter-1) tolfunc xs)
+
 fastcheck                 :: [[Sequence]] -> Int
 fastcheck [hs, vs]        =  sum (concat hs) - sum (concat vs) 
 
@@ -207,6 +215,30 @@ diffHor x y = map or (diff x y)
 diffVer :: [[Disc]] -> [[Disc]] -> [Flag]
 diffVer x y = map or (transpose (diff x y))
 
+trace :: [[Sequence]] -> IO ()
+trace [hs, vs] = putInStreams (cutdown 100 ((goalCheck hs).snd.snd) state)
+                   where state = instream (cycle [hs, vs]) (0, (flag0, (hs, Just (transpose dss))))
+                         dss = createDisc (length hs) (length vs)
+
+putInStreams :: [(Int, ([Flag], ([Sequence], Maybe [[Disc]])))] -> IO ()
+putInStreams [] = putStrLn "[END]"
+putInStreams (insm:insms) = do putStrLn ("loop id = " ++ (show loopid))
+                               --putStrLn ("Flags = " ++ (show flags))
+                               putDisc  graph
+                               putInStreams insms
+                               where loopid = fst insm
+                                     flags  = (fst.snd) insm
+                                     seqs   = (fst.snd.snd) insm
+                                     graph  = (snd.snd.snd) insm
+
+putStreams :: [([Sequence], Maybe [[Disc]])] -> IO ()
+putStreams [] = putStrLn "[END]"
+putStreams (stream:streams) = do putStrLn (show (fst stream))
+                                 putDisc (snd stream)
+                                 putStreams streams
+
+putDisc :: Maybe [[Disc]] -> IO ()
+putDisc dss = do putStrLn (show (Graph dss))
 
 data Graph = Graph (Maybe [[Disc]])
 
@@ -241,10 +273,7 @@ discLarge  = createDisc 15 15
 -}
 seqsHor1 = createSeqs [[3],[1,1,1],[5],[3],[1,1]]
 seqsVer1 = createSeqs [[2],[1,3],[4],[1,3],[2]]
-hs1      = (seqsHor1,discSmall)
-vs1      = (seqsVer1,discSmall)
-hsM1     = (seqsHor1,Just discSmall)
-vsM1     = (seqsVer1,Just discSmall)
+p1       = [seqsHor1,seqsVer1]
 discCor1 = [[Va,Oc,Oc,Oc,Va],
             [Oc,Va,Oc,Va,Oc],
             [Oc,Oc,Oc,Oc,Oc],
