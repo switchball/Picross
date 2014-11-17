@@ -1,7 +1,7 @@
 import Data.List (transpose, intersperse, intercalate)
 import Data.Char
 import Control.Monad
-import Data.Time
+import Data.Time (getCurrentTime, diffUTCTime, NominalDiffTime)
 
 count x xs = length $ filter (==x) xs
 
@@ -282,7 +282,7 @@ discSmall  = createDisc 5 5
 discMedium = createDisc 10 10
 discLarge  = createDisc 15 15
 -- == Test Case == --
-{- Case No.1 Sprite
+{- Case No.1 Sprite [0.01s]
 | . o o o . |
 | o . o . o |
 | o o o o o |
@@ -298,7 +298,7 @@ discCor1 = [[Va,Oc,Oc,Oc,Va],
             [Va,Oc,Oc,Oc,Va],
             [Va,Oc,Va,Oc,Va]]
 
-{- Case No.2 Snow 
+{- Case No.2 Snow [0.01s]
 | . . o . . |
 | o o . o o |
 | . o . o . |
@@ -314,7 +314,7 @@ discCor2 = [[Va,Va,Oc,Va,Va],
             [Oc,Oc,Va,Oc,Oc],
             [Va,Va,Oc,Va,Va]]
 
-{- Case No.3 Box 
+{- Case No.3 Box [0.05s]
 | o o o o o o o o o o |
 | o . . . . . . . . o |
 | o . . . . . . . . o |
@@ -331,7 +331,7 @@ seqsVer3 = createSeqs [[10],[1,1],[1,1],[1,1],[1,4,1],[1,4,1],[1,1],[1,1],[1,1],
 p3       = [seqsHor3,seqsVer3]
 discCor3 = undefined
 
-{- Case No.4 Unknown 
+{- Case No.4 Unknown [0.06s]
 | . . . . . . . . . . |
 | ? o o ? . . . . . o |
 | ? o o ? . . . o o o |
@@ -348,7 +348,7 @@ seqsVer4 = createSeqs [[0],[3,1],[3,3],[8],[10],[10],[8],[3,3],[3,1],[0]]
 p4       = [seqsHor4,seqsVer4]
 discCor4 = undefined
 
-{- Case No.5 Heart 
+{- Case No.5 Heart [0.29s]
 | . . o o o . . . . . o o o . . |
 | . o o o o o . . . o o . o o . |
 | . o o o o o o . o o o o . o . |
@@ -373,7 +373,7 @@ disc5    = createDisc 14 15
 discCor5 = undefined
 
 
-{- Case No.6 
+{- Case No.6 [7.60s]
 | o o o o o o o o o o o o o o o |
 | o . . o . o . . . o . o . . o |
 | o . . o o o . . . o o o . . o |
@@ -398,7 +398,7 @@ p6       = [seqsHor6,seqsVer6]
 discCor6 = undefined
 
 
-{- Case No.7 Superman
+{- Case No.7 Superman [0.04s]
 | . o o o o o o o o . |
 | o o o . . . . o o o |
 | o o . o o o o . o o |
@@ -415,7 +415,7 @@ seqsVer7 = createSeqs [[4],[7],[2,5],[1,2,1,3],[1,2,2,2],[1,2,2,2],[1,3,3],[2,6]
 p7       = [seqsHor7,seqsVer7]
 discCor7 = undefined
 
-{- Case No.8 Detective
+{- Case No.8 Detective [0.53s]
 | . . . . . o o o o o . . . . . |
 | . . . o o o . . . o o o . . . |
 | . . . . o o o o o o o . . . . |
@@ -440,7 +440,7 @@ p8       = [seqsHor8,seqsVer8]
 discCor8 = undefined
 
 
-{- Case No.9 Squirrel
+{- Case No.9 Squirrel [0.13s]
 | . . . . . . o . . . o o o o . |
 | . . o o o o o . . o o . . o o |
 | . o o o o o . . o o o . o o o |
@@ -465,7 +465,7 @@ p9       = [seqsHor9,seqsVer9]
 discCor9 = undefined
 
 
-{- Case No.10 Where's my Home?
+{- Case No.10 Where's my Home? [1.90s]
 | o . . o . . . . o . . o o o . . . . . . |
 | o . . o . . . o o . o o o . . . . . . . |
 | o . . o . . . o o . o o . . . . . . . . |
@@ -496,7 +496,7 @@ p10       = [seqsHor10,seqsVer10]
 discCor10 = undefined
 
 
-{- Case No.11 Apple
+{- Case No.11 Apple [0.39s]
 | . . . . . . . . . o . . . . . . . . . . |
 | . . . . o o o o . o . . o o o o o . . . |
 | . . . o o o o o o o . o o o o o o o . . |
@@ -527,7 +527,7 @@ seqsVer11 = createSeqs [[5],[1,9],[1,2,2],[2,2,2],[3,2,7,2],[3,1,9,3],[3,12,2],[
 p11       = [seqsHor11,seqsVer11]
 discCor11 = undefined
 
-{- Case No.12 Rabbit on Acid
+{- Case No.12 Rabbit on Acid [>3 min]
 | . . . . o o o o o . o o o o o . . . . . |
 | . o o o . . . . . o . . . . o o . . . . |
 | . o . . . . . . . o o o o o . o o . . . |
