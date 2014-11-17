@@ -82,14 +82,55 @@ merge (x:x':xs) (y:ys) = x:y:(merge (x':xs) ys)
 
 -- solve x_0+x_1+...+x_m = n 
 -- where x_1...x_(m-1) >0 and x_0,x_m >= 0
--- current alg notation: T=O(n^m) slow when n^m > 1e6
+-- =================================
+-- ..O...O.O.O..O..O.....
+--   |   | | |  |  |
+--   0   1 2 3 ... m        => m=5
+-- xx xxx x x xx xx xxxxx   => n=16
+-- ()               (---)   => (---) can be zero length
+-- =================================
+-- The number of solutions is C(n+1, m). (n+1>=m)
+-- Note: n>=m-1 should be true, otherwise there is no solutions.
 intpartition     :: Int -> Int -> [[Int]]
-intpartition n m = map fstval $
-                     filter (\s -> sum s <= n) $
-                       (iterate (\z -> concatMap addval z) intval) !! (m-1)
-                       where intval = map (\x->[x]) [0..n]   -- [[0],[1]..[n]]
-                             addval = \s -> map (:s) [1..n]  -- map add [1..n] to head of list
-                             fstval = \xs -> (n-sum xs):xs   -- add (n-sum xs) to head of list
+intpartition n 0 = [[n]]
+intpartition n m = concatMap (\k -> map (k:) (mintpat0 (n-k) m) ) [0..(n-m+1)]
+
+-- =========================
+-- ..O...O.O.O..O..O
+--   |   | | |  |  |
+--   0   1 2 3 ... m => m=5
+--    xxx x x xx xx  => n=9
+-- =========================
+-- minpat is meant to find m integers with sum=n, list all combinations.
+-- illustrated above.
+-- The number of solutions is C(n-1, m-1). (n>=m)
+-- Note: n>=m should be true, otherwise there is no solutions.
+mintpat :: Int -> Int -> [[Int]]
+mintpat n m 
+  | n > 0  && m == 0 = []
+  | n == 0 && m == 0 = [[]]
+  | n >= 1 && m == 1 = [[n]]
+  | n < m            = []
+  | otherwise        = concatMap (\k -> map (k:) (mintpat (n-k) (m-1))) [1..(n-m+1)]
+
+-- =================================
+-- ..O...O.O.O..O..O.....
+--   |   | | |  |  |     |
+--   0   1 2 3 ... m-1   m  => m=6
+--    xxx x x xx xx xxxxx   => n=14
+-- =================================
+-- The difference between mintpat and mintpat0, 
+-- is mintpat0 can have the last element to be zero.
+-- each solution contains m integers, with sum=n.
+-- The number of solutions is C(n, m-1). (n>=m-1)
+-- Note: n>=m-1 should be true, otherwise there is no solutions.
+mintpat0 :: Int -> Int -> [[Int]]
+mintpat0 n m 
+  | n > 0  && m == 0 = []
+  | n == 0 && m == 0 = [[]]
+  | n >= 0 && m == 1 = [[n]]
+  | n < m - 1        = []
+  | otherwise        = concatMap (\k -> map (k:) (mintpat0 (n-k) (m-1))) [1..(n-m+2)]
 
 -- generate a list of [Disc], which contain n elements and satisfy *scan* ds = seq
 -- generate 5 [1,2] = [[Oc,Va,Oc,Oc,Va],[Oc,Va,Va,Oc,Oc],[Va,Oc,Va,Oc,Oc]]
@@ -348,7 +389,7 @@ seqsVer4 = createSeqs [[0],[3,1],[3,3],[8],[10],[10],[8],[3,3],[3,1],[0]]
 p4       = [seqsHor4,seqsVer4]
 discCor4 = undefined
 
-{- Case No.5 Heart [0.29s]
+{- Case No.5 Heart [0.08s]
 | . . o o o . . . . . o o o . . |
 | . o o o o o . . . o o . o o . |
 | . o o o o o o . o o o o . o . |
@@ -373,7 +414,7 @@ disc5    = createDisc 14 15
 discCor5 = undefined
 
 
-{- Case No.6 [7.60s]
+{- Case No.6 [0.11s]
 | o o o o o o o o o o o o o o o |
 | o . . o . o . . . o . o . . o |
 | o . . o o o . . . o o o . . o |
@@ -415,7 +456,7 @@ seqsVer7 = createSeqs [[4],[7],[2,5],[1,2,1,3],[1,2,2,2],[1,2,2,2],[1,3,3],[2,6]
 p7       = [seqsHor7,seqsVer7]
 discCor7 = undefined
 
-{- Case No.8 Detective [0.53s]
+{- Case No.8 Detective [0.12s]
 | . . . . . o o o o o . . . . . |
 | . . . o o o . . . o o o . . . |
 | . . . . o o o o o o o . . . . |
@@ -440,7 +481,7 @@ p8       = [seqsHor8,seqsVer8]
 discCor8 = undefined
 
 
-{- Case No.9 Squirrel [0.13s]
+{- Case No.9 Squirrel [0.06s]
 | . . . . . . o . . . o o o o . |
 | . . o o o o o . . o o . . o o |
 | . o o o o o . . o o o . o o o |
@@ -465,7 +506,7 @@ p9       = [seqsHor9,seqsVer9]
 discCor9 = undefined
 
 
-{- Case No.10 Where's my Home? [1.90s]
+{- Case No.10 Where's my Home? [1.09s]
 | o . . o . . . . o . . o o o . . . . . . |
 | o . . o . . . o o . o o o . . . . . . . |
 | o . . o . . . o o . o o . . . . . . . . |
@@ -496,7 +537,7 @@ p10       = [seqsHor10,seqsVer10]
 discCor10 = undefined
 
 
-{- Case No.11 Apple [0.39s]
+{- Case No.11 Apple [0.34s]
 | . . . . . . . . . o . . . . . . . . . . |
 | . . . . o o o o . o . . o o o o o . . . |
 | . . . o o o o o o o . o o o o o o o . . |
@@ -527,7 +568,7 @@ seqsVer11 = createSeqs [[5],[1,9],[1,2,2],[2,2,2],[3,2,7,2],[3,1,9,3],[3,12,2],[
 p11       = [seqsHor11,seqsVer11]
 discCor11 = undefined
 
-{- Case No.12 Rabbit on Acid [>3 min]
+{- Case No.12 Rabbit on Acid [7.84s]
 | . . . . o o o o o . o o o o o . . . . . |
 | . o o o . . . . . o . . . . o o . . . . |
 | . o . . . . . . . o o o o o . o o . . . |
