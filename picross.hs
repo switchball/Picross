@@ -170,10 +170,16 @@ fillWithFlags fs qs dss = sequence (zipWith3
                             chosen    = zipWith (&&) fs filtered
 
 
---stream
+-- generate a stream containing main state of current [[Disc]],
+-- the stream maybe finite (in this case Nothing is the last element),
+-- or maybe infinite (can both be solved or have some uncertain structure).
+-- it feeds the within method.
 stream :: [[Sequence]] -> ([Sequence], Maybe [[Disc]]) -> [([Sequence], Maybe [[Disc]])]
 stream cseqss ins = map snd (instream cseqss (flag0, ins))
 
+-- inner stream have more inner temp state which the outside world does not need to know,
+-- it is the more general version than stream.
+-- The Flag is to indicate
 instream :: [[Sequence]] -> ([Flag], ([Sequence], Maybe [[Disc]])) -> [([Flag], ([Sequence], Maybe [[Disc]]))]
 instream cseqss x@(flags, (seqs, Nothing))  = x:[]
 instream cseqss x@(flags, (seqs, Just dss)) = 
@@ -301,7 +307,6 @@ vsM4     = (seqsVer4,Just discMedium)
 discCor4 = undefined
 
 {- Case No.5 Heart 
-| . . . . . . . . . . . . . . . |
 | . . o o o . . . . . o o o . . |
 | . o o o o o . . . o o . o o . |
 | . o o o o o o . o o o o . o . |
@@ -317,14 +322,11 @@ discCor4 = undefined
 | . . . . . . o o o . . . . . . |
 | . . . . . . . o . . . . . . . |
 -}
-seqsHor5 = createSeqs [[0],[3,3],[5,2,2],[6,4,1],[15],[2,2,1,2,1,2],[2,1,1,1,2],
+seqsHor5 = createSeqs [[3,3],[5,2,2],[6,4,1],[15],[2,2,1,2,1,2],[2,1,1,1,2],
                        [1,2,2,1,1],[1,3,3,1],[11],[9],[7],[5],[3],[1]]
 seqsVer5 = createSeqs [[3],[7],[4,1],[10],[5,5],[3,5],[3,5],[1,7],[3,7],[11],
                        [4,3],[1,5,2],[2,1,1],[7],[3]]
-hs5      = (seqsHor5,discLarge)
-vs5      = (seqsVer5,discLarge)
-hsM5     = (seqsHor5,Just discLarge)
-vsM5     = (seqsVer5,Just discLarge)
+disc5    = createDisc 14 15
 discCor5 = undefined
 
 
