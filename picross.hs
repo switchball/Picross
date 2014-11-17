@@ -2,32 +2,16 @@ import Data.List (transpose, intersperse, intercalate)
 import Data.Char
 import Control.Monad
 
-nest :: (t -> t) -> t -> Int -> t
-nest f x n
-  | n > 0     = nest f (f x) (n-1)
-  | n == 0    = x 
-  | otherwise = error "nest : n < 0"
-
-nest2 :: (t -> t -> t) -> t -> t -> Int -> t
-nest2 g b a n
-  | n > 0     = nest2 g (g a b) b (n-1)
-  | n == 0    = b
-  | otherwise = error "nest2 : n < 0"
-
 count x xs = length $ filter (==x) xs
 
 counti x xs = length $ filter (/=x) xs
 
 count2d x xss = sum $ map (count x) xss
 
--- build a list with n element x
-build     :: a -> Int -> [a]
-build x n = take n (repeat x)
-
 -- build a 2d-list with ns seperate element x
 -- build x [1,0,2] = [[x],[],[x,x]]
 buildseq      :: a -> [Int] -> [[a]]
-buildseq x ns = map (build x) ns
+buildseq x ns = map (\n -> replicate n x) ns
 
 
 data Disc = Un|Oc|Va
@@ -62,10 +46,10 @@ discXor Oc Oc = False
 discXor _  _  = True
 
 createDisc :: Int -> Int -> [[Disc]]
-createDisc m = take m . repeat . createDisc1d
+createDisc m = replicate m . createDisc1d
 
 createDisc1d :: Int -> [Disc]
-createDisc1d n = take n (repeat Un)
+createDisc1d n = replicate n Un
 
 createSeq :: [Int] -> Sequence
 createSeq =  id
@@ -99,7 +83,7 @@ merge (x:x':xs) (y:ys) = x:y:(merge (x':xs) ys)
 intpartition     :: Int -> Int -> [[Int]]
 intpartition n m = map fstval $
                      filter (\s -> sum s <= n) $
-                       nest (\z -> concat $ map addval z) intval (m-1)
+                       (iterate (\z -> concatMap addval z) intval) !! (m-1)
                        where intval = map (\x->[x]) [0..n]   -- [[0],[1]..[n]]
                              addval = \s -> map (:s) [1..n]  -- map add [1..n] to head of list
                              fstval = \xs -> (n-sum xs):xs   -- add (n-sum xs) to head of list
@@ -137,10 +121,10 @@ evidenceM x y       = (liftM2 evidence) x y
 -- if there is no solution or contradiction, Nothing is returned.
 applyRule :: Sequence -> [Disc] -> Maybe [Disc]
 -- for simple situation, notice that [] is equivalent to [0]
-applyRule []  ds = validate ds (build Va n) where n = length ds
+applyRule []  ds = validate ds (replicate n Va) where n = length ds
 applyRule [m] ds
-  | m == 0  = validate ds (build Va n)
-  | m == n  = validate ds (build Oc n)
+  | m == 0  = validate ds (replicate n Va)
+  | m == n  = validate ds (replicate n Oc)
     where n = length ds
 -- for complex situation, generate a list, validate them, then evidence them.
 applyRule seq ds
