@@ -82,14 +82,55 @@ merge (x:x':xs) (y:ys) = x:y:(merge (x':xs) ys)
 
 -- solve x_0+x_1+...+x_m = n 
 -- where x_1...x_(m-1) >0 and x_0,x_m >= 0
--- current alg notation: T=O(n^m) slow when n^m > 1e6
+-- =================================
+-- ..O...O.O.O..O..O.....
+--   |   | | |  |  |
+--   0   1 2 3 ... m        => m=5
+-- xx xxx x x xx xx xxxxx   => n=16
+-- ()               (---)   => (---) can be zero length
+-- =================================
+-- The number of solutions is C(n+1, m). (n+1>=m)
+-- Note: n>=m-1 should be true, otherwise there is no solutions.
 intpartition     :: Int -> Int -> [[Int]]
-intpartition n m = map fstval $
-                     filter (\s -> sum s <= n) $
-                       (iterate (\z -> concatMap addval z) intval) !! (m-1)
-                       where intval = map (\x->[x]) [0..n]   -- [[0],[1]..[n]]
-                             addval = \s -> map (:s) [1..n]  -- map add [1..n] to head of list
-                             fstval = \xs -> (n-sum xs):xs   -- add (n-sum xs) to head of list
+intpartition n 0 = [[n]]
+intpartition n m = concatMap (\k -> map (k:) (mintpat0 (n-k) m) ) [0..(n-m+1)]
+
+-- =========================
+-- ..O...O.O.O..O..O
+--   |   | | |  |  |
+--   0   1 2 3 ... m => m=5
+--    xxx x x xx xx  => n=9
+-- =========================
+-- minpat is meant to find m integers with sum=n, list all combinations.
+-- illustrated above.
+-- The number of solutions is C(n-1, m-1). (n>=m)
+-- Note: n>=m should be true, otherwise there is no solutions.
+mintpat :: Int -> Int -> [[Int]]
+mintpat n m 
+  | n > 0  && m == 0 = []
+  | n == 0 && m == 0 = [[]]
+  | n >= 1 && m == 1 = [[n]]
+  | n < m            = []
+  | otherwise        = concatMap (\k -> map (k:) (mintpat (n-k) (m-1))) [1..(n-m+1)]
+
+-- =================================
+-- ..O...O.O.O..O..O.....
+--   |   | | |  |  |     |
+--   0   1 2 3 ... m-1   m  => m=6
+--    xxx x x xx xx xxxxx   => n=14
+-- =================================
+-- The difference between mintpat and mintpat0, 
+-- is mintpat0 can have the last element to be zero.
+-- each solution contains m integers, with sum=n.
+-- The number of solutions is C(n, m-1). (n>=m-1)
+-- Note: n>=m-1 should be true, otherwise there is no solutions.
+mintpat0 :: Int -> Int -> [[Int]]
+mintpat0 n m 
+  | n > 0  && m == 0 = []
+  | n == 0 && m == 0 = [[]]
+  | n >= 0 && m == 1 = [[n]]
+  | n < m - 1        = []
+  | otherwise        = concatMap (\k -> map (k:) (mintpat0 (n-k) (m-1))) [1..(n-m+2)]
 
 -- generate a list of [Disc], which contain n elements and satisfy *scan* ds = seq
 -- generate 5 [1,2] = [[Oc,Va,Oc,Oc,Va],[Oc,Va,Va,Oc,Oc],[Va,Oc,Va,Oc,Oc]]
