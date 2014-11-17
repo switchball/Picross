@@ -147,7 +147,7 @@ solveNew [hs, vs]         =  solvePartial [hs, vs] $ createDisc (length hs) (len
 
 solvePartial              :: [[Sequence]] -> [[Disc]] -> Maybe [[Disc]]
 solvePartial [hs, vs] dss =  snd $ within 100 (goalCheck hs)
-                                          (stream (cycle [hs, vs]) (hs, Just dss))
+                                          (stream (cycle [hs, vs]) (hs, Just (transpose dss)))
 
 goalCheck                         :: [Sequence] -> ([Sequence], Maybe [[Disc]]) -> Bool
 goalCheck targetSeqs (seqs, mdss) = seqs == targetSeqs 
@@ -167,7 +167,7 @@ fillWithFlags fs qs dss = sequence (zipWith3
                             inf       = foldl min (2^31) (filter (>0) heuristic)
                             sup       = inf * 100
                             filtered  = map (\x-> x<=sup) heuristic
-                            chosen    = zipWith (&&) fs filtered
+                            chosen    = zipWith (||) fs filtered
 
 
 -- generate a stream containing main state of current [[Disc]],
@@ -175,18 +175,22 @@ fillWithFlags fs qs dss = sequence (zipWith3
 -- or maybe infinite (can both be solved or have some uncertain structure).
 -- it feeds the within method.
 stream :: [[Sequence]] -> ([Sequence], Maybe [[Disc]]) -> [([Sequence], Maybe [[Disc]])]
-stream cseqss ins = map snd (instream cseqss (flag0, ins))
+stream cseqss ins = map (snd.snd) (instream cseqss (0, (flag0, ins)))
 
 -- inner stream have more inner temp state which the outside world does not need to know,
 -- it is the more general version than stream.
--- The Flag is to indicate
-instream :: [[Sequence]] -> ([Flag], ([Sequence], Maybe [[Disc]])) -> [([Flag], ([Sequence], Maybe [[Disc]]))]
-instream cseqss x@(flags, (seqs, Nothing))  = x:[]
-instream cseqss x@(flags, (seqs, Just dss)) = 
+-- The Flag is to indicate which column is changed.
+-- The Int  is to indicate which loop it is.
+-- The init value's Int is 0, when it is 0 or 1, flag must be all set to True,
+-- This avoid a infinite loop bug when first (hor) infer failed.
+instream :: [[Sequence]] -> (Int, ([Flag], ([Sequence], Maybe [[Disc]]))) -> [(Int, ([Flag], ([Sequence], Maybe [[Disc]])))]
+instream cseqss x@(loop, (flags, (seqs, Nothing)))  = x:[]
+instream cseqss x@(loop, (flags, (seqs, Just dss))) = 
   x:(instream (tail cseqss) 
-              (newflags,   ( (head cseqss), result ) ) )
+              (loop+1, (newflags,   ( (head cseqss), result ) ) ) )
   where result = fillWithFlags flags (head cseqss) (transpose dss)
-        newflags = case result of (Just newdiscss) -> diffVer dss newdiscss
+        newflags = if loop == 0 then (repeat True) else
+                   case result of (Just newdiscss) -> diffHor dss (transpose newdiscss)
                                   otherwise -> (repeat False)
 {-
 stream :: [[Sequence]] -> Maybe [[Disc]] -> [Maybe [[Disc]]]
