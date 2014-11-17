@@ -62,6 +62,8 @@ type Sequences = [[Int]]
 
 type Flag = Bool
 
+
+
 uncertainty :: [[Disc]] -> Int
 uncertainty = count2d Un 
 
@@ -163,6 +165,7 @@ goalCheck targetSeqs (seqs, mdss) = seqs == targetSeqs
                                                     (Just dss) -> uncertainty dss == 0
 
 -- fillWithFlags take a flag list, a state, and produce a list of [Disc] guess
+-- length of [Flag], [Sequence], [[Disc]] should be equal.
 -- Notice that if one of the (Maybe [Disc]) is Nothing, 
 --   the whole (Maybe [[Disc]]) will be Nothing.
 fillWithFlags :: [Flag] -> [Sequence] -> [[Disc]] -> Maybe [[Disc]]
@@ -184,6 +187,7 @@ fillWithFlags fs qs dss = sequence (zipWith3
 -- it feeds the within method.
 stream :: [[Sequence]] -> ([Sequence], Maybe [[Disc]]) -> [([Sequence], Maybe [[Disc]])]
 stream cseqss ins = map (snd.snd) (instream cseqss (0, (flag0, ins)))
+                    where flag0 = (replicate (length (fst ins)) True)
 
 -- inner stream have more inner temp state which the outside world does not need to know,
 -- it is the more general version than stream.
@@ -195,11 +199,12 @@ instream :: [[Sequence]] -> (Int, ([Flag], ([Sequence], Maybe [[Disc]]))) -> [(I
 instream cseqss x@(loop, (flags, (seqs, Nothing)))  = x:[]
 instream cseqss x@(loop, (flags, (seqs, Just dss))) = 
   x:(instream (tail cseqss) 
-              (loop+1, (newflags,   ( (head cseqss), result ) ) ) )
-  where result = fillWithFlags flags (head cseqss) (transpose dss)
-        newflags = if loop == 0 then (repeat True) else
+              (loop+1, (newflags,   ( hseqs, result ) ) ) )
+  where hseqs  = head cseqss
+        result = fillWithFlags flags hseqs (transpose dss)
+        newflags = if loop == 0 then (replicate (length (head (tail cseqss))) True) else
                    case result of (Just newdiscss) -> diffHor dss (transpose newdiscss)
-                                  otherwise -> (repeat False)
+                                  otherwise -> (replicate 25 False)
 {-
 stream :: [[Sequence]] -> Maybe [[Disc]] -> [Maybe [[Disc]]]
 stream cseqss mdss@(Nothing)  = mdss:[]
@@ -216,20 +221,27 @@ diffVer :: [[Disc]] -> [[Disc]] -> [Flag]
 diffVer x y = map or (transpose (diff x y))
 
 trace :: [[Sequence]] -> IO ()
-trace [hs, vs] = putInStreams (cutdown 100 ((goalCheck hs).snd.snd) state)
-                   where state = instream (cycle [hs, vs]) (0, (flag0, (hs, Just (transpose dss))))
-                         dss = createDisc (length hs) (length vs)
+trace [hs, vs] = 
+  putInStreams (cutdown 100 ((goalCheck hs).snd.snd) state)
+    where state = instream (cycle [hs, vs]) (0, (flag0, (hs, Just (transpose dss))))
+          dss   = createDisc (length hs) (length vs)
+          flag0 = (replicate (length hs) True)
 
 putInStreams :: [(Int, ([Flag], ([Sequence], Maybe [[Disc]])))] -> IO ()
 putInStreams [] = putStrLn "[END]"
-putInStreams (insm:insms) = do putStrLn ("loop id = " ++ (show loopid))
-                               --putStrLn ("Flags = " ++ (show flags))
-                               putDisc  graph
-                               putInStreams insms
-                               where loopid = fst insm
-                                     flags  = (fst.snd) insm
-                                     seqs   = (fst.snd.snd) insm
-                                     graph  = (snd.snd.snd) insm
+putInStreams (insm:insms) = 
+  do putStrLn ("loop [#" ++ (show loopid) ++ "]")
+     putStrLn ("< " ++ (showFlags flags))
+     putDisc  graph
+     putInStreams insms
+     where loopid = fst insm
+           flags  = (fst.snd) insm
+           seqs   = (fst.snd.snd) insm
+           graph  = (snd.snd.snd) insm
+           showFlags :: [Flag] -> String
+           showFlags []     = ">"
+           showFlags (f:fs) = (if f then "T " else "F ") ++ (showFlags fs)
+
 
 putStreams :: [([Sequence], Maybe [[Disc]])] -> IO ()
 putStreams [] = putStrLn "[END]"
@@ -258,7 +270,6 @@ seq111 = createSeq [1,1,1]
 disc1d = createDisc1d 5
 disc2d = createDisc 3 3
 
-flag0  = (repeat True)
 
 discSmall  = createDisc 5 5
 discMedium = createDisc 10 10
@@ -359,6 +370,7 @@ seqsHor5 = createSeqs [[3,3],[5,2,2],[6,4,1],[15],[2,2,1,2,1,2],[2,1,1,1,2],
                        [1,2,2,1,1],[1,3,3,1],[11],[9],[7],[5],[3],[1]]
 seqsVer5 = createSeqs [[3],[7],[4,1],[10],[5,5],[3,5],[3,5],[1,7],[3,7],[11],
                        [4,3],[1,5,2],[2,1,1],[7],[3]]
+p5       = [seqsHor5,seqsVer5]
 disc5    = createDisc 14 15
 discCor5 = undefined
 
