@@ -1,6 +1,7 @@
 import Data.List (transpose, intersperse, intercalate)
 import Data.Char
 import Control.Monad
+import Data.Time
 
 count x xs = length $ filter (==x) xs
 
@@ -137,7 +138,7 @@ applyRule seq ds
 
 within                    :: Int -> (t -> Bool) -> [t] -> t
 within maxiter tolfunc (x:xs)
-  | maxiter == 1          = x
+  | maxiter == 0          = x
   | tolfunc x             = x
   | otherwise             = within (maxiter-1) tolfunc xs
 
@@ -145,7 +146,7 @@ within maxiter tolfunc (x:xs)
 cutdown                   :: Int -> (t -> Bool) -> [t] -> [t]
 cutdown _  _  []          =  []
 cutdown maxiter tolfunc (x:xs)
-  | maxiter == 1          =  [x]
+  | maxiter == 0          =  [x]
   | tolfunc x             =  [x]
   | otherwise             =  x:(cutdown (maxiter-1) tolfunc xs)
 
@@ -220,9 +221,15 @@ diffHor x y = map or (diff x y)
 diffVer :: [[Disc]] -> [[Disc]] -> [Flag]
 diffVer x y = map or (transpose (diff x y))
 
+timing :: [[Sequence]] -> IO NominalDiffTime
+timing [hs,vs] = do start <- getCurrentTime
+                    putStrLn $ show $ Graph $ solveNew [hs,vs]
+                    stop  <- getCurrentTime
+                    return $ diffUTCTime stop start
+
 trace :: [[Sequence]] -> IO ()
-trace [hs, vs] = 
-  putInStreams (cutdown 100 ((goalCheck hs).snd.snd) state)
+trace [hs, vs] = do
+    putInStreams (cutdown 100 ((goalCheck hs).snd.snd) state)
     where state = instream (cycle [hs, vs]) (0, (flag0, (hs, Just (transpose dss))))
           dss   = createDisc (length hs) (length vs)
           flag0 = (replicate (length hs) True)
@@ -300,10 +307,7 @@ discCor1 = [[Va,Oc,Oc,Oc,Va],
 -}
 seqsHor2 = createSeqs [[1],[2,2],[1,1],[2,2],[1]]
 seqsVer2 = createSeqs [[1,1],[3],[1,1],[3],[1,1]]
-hs2      = (seqsHor2,discSmall)
-vs2      = (seqsVer2,discSmall)
-hsM2     = (seqsHor2,Just discSmall)
-vsM2     = (seqsVer2,Just discSmall)
+p2       = [seqsHor2,seqsVer2]
 discCor2 = [[Va,Va,Oc,Va,Va],
             [Oc,Oc,Va,Oc,Oc],
             [Va,Oc,Va,Oc,Va],
@@ -324,10 +328,7 @@ discCor2 = [[Va,Va,Oc,Va,Va],
 -}
 seqsHor3 = createSeqs [[10],[1,1],[1,1],[1,2,1],[1,2,1],[1,2,1],[1,2,1],[1,1],[1,1],[10]]
 seqsVer3 = createSeqs [[10],[1,1],[1,1],[1,1],[1,4,1],[1,4,1],[1,1],[1,1],[1,1],[10]]
-hs3      = (seqsHor3,discMedium)
-vs3      = (seqsVer3,discMedium)
-hsM3     = (seqsHor3,Just discMedium)
-vsM3     = (seqsVer3,Just discMedium)
+p3       = [seqsHor3,seqsVer3]
 discCor3 = undefined
 
 {- Case No.4 Unknown 
@@ -344,10 +345,7 @@ discCor3 = undefined
 -}
 seqsHor4 = createSeqs [[1,2,1],[2,2,2],[8],[6],[4],[4],[4],[6],[6],[8]]
 seqsVer4 = createSeqs [[0],[3,1],[3,3],[8],[10],[10],[8],[3,3],[3,1],[0]]
-hs4      = (seqsHor4,discMedium)
-vs4      = (seqsVer4,discMedium)
-hsM4     = (seqsHor4,Just discMedium)
-vsM4     = (seqsVer4,Just discMedium)
+p4       = [seqsHor4,seqsVer4]
 discCor4 = undefined
 
 {- Case No.5 Heart 
