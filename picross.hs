@@ -389,7 +389,7 @@ seqsVer4 = createSeqs [[0],[3,1],[3,3],[8],[10],[10],[8],[3,3],[3,1],[0]]
 p4       = [seqsHor4,seqsVer4]
 discCor4 = undefined
 
-{- Case No.5 Heart [0.29s]
+{- Case No.5 Heart [0.08s]
 | . . o o o . . . . . o o o . . |
 | . o o o o o . . . o o . o o . |
 | . o o o o o o . o o o o . o . |
@@ -414,7 +414,7 @@ disc5    = createDisc 14 15
 discCor5 = undefined
 
 
-{- Case No.6 [7.60s]
+{- Case No.6 [0.11s]
 | o o o o o o o o o o o o o o o |
 | o . . o . o . . . o . o . . o |
 | o . . o o o . . . o o o . . o |
@@ -456,7 +456,7 @@ seqsVer7 = createSeqs [[4],[7],[2,5],[1,2,1,3],[1,2,2,2],[1,2,2,2],[1,3,3],[2,6]
 p7       = [seqsHor7,seqsVer7]
 discCor7 = undefined
 
-{- Case No.8 Detective [0.53s]
+{- Case No.8 Detective [0.12s]
 | . . . . . o o o o o . . . . . |
 | . . . o o o . . . o o o . . . |
 | . . . . o o o o o o o . . . . |
@@ -481,7 +481,7 @@ p8       = [seqsHor8,seqsVer8]
 discCor8 = undefined
 
 
-{- Case No.9 Squirrel [0.13s]
+{- Case No.9 Squirrel [0.06s]
 | . . . . . . o . . . o o o o . |
 | . . o o o o o . . o o . . o o |
 | . o o o o o . . o o o . o o o |
@@ -506,7 +506,7 @@ p9       = [seqsHor9,seqsVer9]
 discCor9 = undefined
 
 
-{- Case No.10 Where's my Home? [1.90s]
+{- Case No.10 Where's my Home? [1.09s]
 | o . . o . . . . o . . o o o . . . . . . |
 | o . . o . . . o o . o o o . . . . . . . |
 | o . . o . . . o o . o o . . . . . . . . |
@@ -537,7 +537,7 @@ p10       = [seqsHor10,seqsVer10]
 discCor10 = undefined
 
 
-{- Case No.11 Apple [0.39s]
+{- Case No.11 Apple [0.34s]
 | . . . . . . . . . o . . . . . . . . . . |
 | . . . . o o o o . o . . o o o o o . . . |
 | . . . o o o o o o o . o o o o o o o . . |
@@ -568,7 +568,7 @@ seqsVer11 = createSeqs [[5],[1,9],[1,2,2],[2,2,2],[3,2,7,2],[3,1,9,3],[3,12,2],[
 p11       = [seqsHor11,seqsVer11]
 discCor11 = undefined
 
-{- Case No.12 Rabbit on Acid [>3 min]
+{- Case No.12 Rabbit on Acid [7.84s]
 | . . . . o o o o o . o o o o o . . . . . |
 | . o o o . . . . . o . . . . o o . . . . |
 | . o . . . . . . . o o o o o . o o . . . |
