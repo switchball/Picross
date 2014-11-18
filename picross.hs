@@ -1,5 +1,4 @@
 import Data.List (transpose, intersperse, intercalate)
-import Data.Char
 import Control.Monad
 import Data.Time (getCurrentTime, diffUTCTime, NominalDiffTime)
 
@@ -118,6 +117,7 @@ mintpat n m
 --   |   | | |  |  |     |
 --   0   1 2 3 ... m-1   m  => m=6
 --    xxx x x xx xx xxxxx   => n=14
+--                  (---)   => (---) can be zero length
 -- =================================
 -- The difference between mintpat and mintpat0, 
 -- is mintpat0 can have the last element to be zero.
@@ -170,8 +170,10 @@ applyRule [m] ds
   | m == 0  = validate ds (replicate n Va)
   | m == n  = validate ds (replicate n Oc)
     where n = length ds
--- for complex situation, generate a list, validate them, then evidence them.
 applyRule seq ds
+-- check the uncertainty of ds first
+  | count Un ds == 0              = Just ds
+-- for complex situation, generate a list, validate them, then evidence them.
   | sum seq + length seq - 1 <= n = foldl evidenceM Nothing (map (validate ds) (generate n seq))
   | otherwise = Nothing
     where n = length ds
