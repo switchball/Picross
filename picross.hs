@@ -272,7 +272,7 @@ timing [hs,vs] = do start <- getCurrentTime
 
 trace :: [[Sequence]] -> IO ()
 trace [hs, vs] = do
-    putInStreams (cutdown 100 ((goalCheck hs).snd.snd) state)
+    putInStreams (cutdown 49 ((goalCheck hs).snd.snd) state)
     where state = instream (cycle [hs, vs]) (0, (flag0, (hs, Just (transpose dss))))
           dss   = createDisc (length hs) (length vs)
           flag0 = (replicate (length hs) True)
@@ -613,3 +613,19 @@ seqsHor13 = createSeqs [[2],[1,1],[4],[1,1],[2]]
 seqsVer13 = createSeqs [[2],[1,1],[4],[1,1],[2]]
 p13       = [seqsHor13,seqsVer13]
 discCor13 = undefined
+
+{- Case No.14 QR Code [4.99s]
+  [Incomplete version]
+-}
+seqsHor14 = createSeqs 
+  [[7,1,2,7],[1,1,2,1,1,1],[1,3,1,2,1,1,3,1],[1,3,1,1,1,1,3,1],[1,3,1,1,1,1,3,1],[1,1,1,2,1,1],
+   [7,1,1,1,7],[5],[2,1,2,2,3,2],[1,1,1,2,4],[2,3,2,2,1],[1,1,1,1,2,2,2],[1,1,1,1,1,1,1,1],
+   [4,1,1],[7,1,1,2,1],[1,1,4,1,1],[1,3,1,2,1,1,1],[1,3,1,4,1,2],[1,3,1,1,1,2,1],[1,1,1,2],
+   [7,1,3,1,1,1]]
+seqsVer14 = createSeqs 
+  [[7,1,2,7],[1,1,1,1,1,1,1],[1,3,1,1,1,1,3,1],[1,3,1,1,1,3,1],[1,3,1,2,1,3,1],[1,1,2,1,1],
+   [7,1,1,1,7],[1,2],[2,4,3,1,2],[4,2,1,2],[4,1,1,3,1],[2,1,1,1,1,1,3,1],[1,1,4,1,1,1,1,1],
+   [1,2,1],[7,2,1,1,1],[1,1,2,1,1,1],[1,3,1,1,2,2,2],[1,3,1,3,1,1,1],[1,3,1,3],[1,1,2,1,2,1,1],
+   [7,4,4]]
+p14       = [seqsHor14,seqsVer14]
+discCor14 = undefined
