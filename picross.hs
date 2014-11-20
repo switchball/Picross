@@ -601,3 +601,15 @@ seqsVer12 = createSeqs [[2],[2,1,1,1],[1,1,1,1,1],[1,2,3,1],[1,2,2,2],[1,2,2,2],
                         [3,1,2],[4,1],[1,1]]
 p12       = [seqsHor12,seqsVer12]
 discCor12 = undefined
+
+{- Case No.13 Multi-solve chain
+| ? o ? . . |
+| o . o . . |
+| ? o o o ? |
+|   . o . o |
+| . . ? o ? |
+-}
+seqsHor13 = createSeqs [[2],[1,1],[4],[1,1],[2]]
+seqsVer13 = createSeqs [[2],[1,1],[4],[1,1],[2]]
+p13       = [seqsHor13,seqsVer13]
+discCor13 = undefined
